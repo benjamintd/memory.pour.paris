@@ -13,7 +13,7 @@ import Fuse from "fuse.js";
 import { useLocalStorageValue } from "@react-hookz/web";
 import { FeatureCollection, LineString, MultiLineString, Point } from "geojson";
 import mapboxgl from "mapbox-gl";
-import { keyBy, mapKeys, range, sumBy } from "lodash";
+import { range, sumBy } from "lodash";
 import { Transition } from "@headlessui/react";
 import classNames from "classnames";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
@@ -21,6 +21,7 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "react-circular-progressbar/dist/styles.css";
 import StreetIcon from "@/components/StreetIcon";
+import MenuComponent from "@/components/Menu";
 
 const fc = data as FeatureCollection<
   LineString | MultiLineString | Point,
@@ -136,6 +137,12 @@ export default function Home() {
       initializeWithValue: false,
     }
   );
+
+  const onReset = useCallback(() => {
+    if (confirm("Vous allez perdre votre progression. Êtes-vous sûr ?")) {
+      setFound([]);
+    }
+  }, [setFound]);
 
   const foundStreetsPercentage = useMemo(() => {
     return sumBy(
@@ -459,49 +466,43 @@ export default function Home() {
     <main className="flex flex-row items-center justify-between h-screen">
       <div className="relative flex justify-center h-full grow">
         <div className="absolute top-0 left-0 w-full h-full" id="map" />
-
-        <input
-          ref={inputRef}
-          placeholder="Rue ou station de métro"
-          value={search}
-          // @ts-ignore
-          onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
-          id="input"
-          type="text"
-          autoFocus
-          className="absolute w-72 h-12 px-4 py-2 top-32 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
-          onKeyDown={onKeyDown}
-        ></input>
+        <div className="absolute w-96 max-w-screen h-12 top-32 flex gap-4">
+          <input
+            className="grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
+            ref={inputRef}
+            placeholder="Rue ou station de métro"
+            value={search}
+            // @ts-ignore
+            onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
+            id="input"
+            type="text"
+            autoFocus
+            onKeyDown={onKeyDown}
+          ></input>
+          <MenuComponent onReset={onReset} />
+        </div>
       </div>
-      <div className="h-full p-6 overflow-y-auto xl:w-[32rem] lg:w-96 hidden lg:block bg-blue-200">
-        <button
-          className="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-full outline-none focus:ring-2 ring-blue-800"
-          onClick={() => {
-            setFound([]);
-          }}
-        >
-          reset
-        </button>
-
-        <p className="text-xl font-bold mb-2">
-          {(foundStreetsPercentage * 100).toFixed(1)}% des rues trouvées
+      <div className="h-full p-6 overflow-y-auto xl:w-[32rem] lg:w-96 hidden shadow-lg lg:block bg-blue-50">
+        <p className="text-xl font-bold">
+          {(foundStreetsPercentage * 100).toFixed(1)}%
         </p>
-        <div className="w-full grid grid-cols-[20] grid-rows-1 grid-flow-col gap-1">
+        <p className="text-sm mb-2">kilomètres de rues trouvés</p>
+        <div className="w-full grid grid-cols-[20] grid-rows-1 grid-flow-col gap-1 mb-4">
           {range(0, 20).map((i) => (
             <div
               key={i}
-              className={classNames("h-6 w-full col-span-1", {
+              className={classNames("h-6 w-full col-span-1 shadow-sm", {
                 "bg-blue-600": i < foundStreetsPercentage * 20,
                 "bg-white": i >= foundStreetsPercentage * 20,
               })}
             ></div>
           ))}
         </div>
-        <p className="text-xl font-bold mb-2">
-          {(foundStationsPercentage * 100).toFixed(1)}% des stations de métro
-          trouvées
+        <p className="text-xl font-bold">
+          {(foundStationsPercentage * 100).toFixed(1)}%
         </p>
-        <div className="grid grid-cols-[8] grid-rows-2 grid-flow-col gap-1">
+        <p className="text-sm mb-2">des stations de métro trouvées</p>
+        <div className="grid grid-cols-[8] grid-rows-2 grid-flow-col gap-1 mb-4">
           {METRO_LINES.map((line) => {
             return (
               <div
@@ -533,7 +534,7 @@ export default function Home() {
             );
           })}
         </div>
-
+        <hr className="w-full border-b border-blue-100 my-4" />
         <ol>
           {(found || []).map((id) => {
             const feature = idMap.get(id);

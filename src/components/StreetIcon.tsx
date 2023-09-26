@@ -19,7 +19,7 @@ const StreetIcon = ({ className }: { className: string }) => {
         d="M39 53.6842V66H142V53.6842C130 53.6842 129 27.0001 90.5 27C52 26.9999 51 53.6842 39 53.6842Z"
         fill="#1E3A8A"
         stroke="#648D40"
-        stroke-width="15"
+        strokeWidth="15"
       />
       <circle cx="29.5" cy="78.5" r="12.5" fill="#86AA65" />
       <circle cx="90" cy="30" r="8" fill="#86AA65" />
