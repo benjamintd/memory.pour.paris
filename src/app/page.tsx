@@ -457,7 +457,10 @@ export default function Home() {
         });
 
         mapboxMap.once("data", () => {
-          console.log("firing");
+          setMap(mapboxMap);
+        });
+
+        mapboxMap.once("idle", () => {
           setMap(mapboxMap);
         });
       });
@@ -465,9 +468,7 @@ export default function Home() {
   }, [map]);
 
   useEffect(() => {
-    console.log("effect", map, found);
     if (!map || !found) return;
-    console.log("feature-state");
 
     map.removeFeatureState({ source: "paris" });
 
@@ -549,13 +550,17 @@ export default function Home() {
           })}
         </div>
         <hr className="w-full border-b border-blue-100 my-4" />
-        <p className="text-sm uppercase text-blue-700">
-          {(found || []).length} éléments trouvés
-        </p>
-        <p className="text-xs uppercase text-blue-700 mb-4">
-          {(foundStreetsPercentage * fc.properties.totalLength).toFixed(1)} km
-          de rues
-        </p>
+        {found?.length && (
+          <>
+            <p className="text-sm uppercase text-blue-900">
+              {found.length} éléments trouvés
+            </p>
+            <p className="text-xs uppercase text-blue-900 mb-4">
+              {(foundStreetsPercentage * fc.properties.totalLength).toFixed(1)}{" "}
+              km de rues
+            </p>
+          </>
+        )}
         <ol>
           {(found || []).map((id) => {
             const feature = idMap.get(id);
