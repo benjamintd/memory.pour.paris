@@ -15,6 +15,7 @@ const font = localFont({
       style: "normal",
     },
   ],
+  variable: "--font-sans",
 });
 export const metadata: Metadata = {
   title: "Les rues de Paris",

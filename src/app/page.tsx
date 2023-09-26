@@ -121,6 +121,7 @@ const LINE_NAMES: { [key: string]: string } = {
 export default function Home() {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
   const [search, setSearch] = useState<string>("");
+  const [labelsHidden, hideLabels] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const idMap = useMemo(() => {
@@ -144,6 +145,13 @@ export default function Home() {
   }, [localFound]);
 
   const [hoveredId, setHoveredId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (map && labelsHidden) {
+      map.setLayoutProperty("voies-labels", "visibility", "none");
+      map.setLayoutProperty("metro-labels", "visibility", "none");
+    }
+  }, [labelsHidden, map]);
 
   const onReset = useCallback(() => {
     if (confirm("Vous allez perdre votre progression. Êtes-vous sûr ?")) {
@@ -558,7 +566,11 @@ export default function Home() {
             autoFocus
             onKeyDown={onKeyDown}
           ></input>
-          <MenuComponent onReset={onReset} />
+          <MenuComponent
+            onReset={onReset}
+            hideLabels={hideLabels}
+            labelsHidden={labelsHidden}
+          />
         </div>
       </div>
       <div className="h-full p-6 overflow-y-auto xl:w-[32rem] lg:w-96 hidden shadow-lg lg:block bg-blue-50">

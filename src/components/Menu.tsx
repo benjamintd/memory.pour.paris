@@ -1,9 +1,20 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { Menu, Transition } from "@headlessui/react";
 import MenuIcon from "./MenuIcon";
 import classNames from "classnames";
+import AboutModal from "./AboutModal";
 
-export default function MenuComponent({ onReset }: { onReset: () => void }) {
+export default function MenuComponent({
+  onReset,
+  labelsHidden,
+  hideLabels,
+}: {
+  onReset: () => void;
+  labelsHidden: boolean;
+  hideLabels: (hide: boolean) => void;
+}) {
+  const [modalOpen, setModalOpen] = useState(false);
+
   return (
     <Menu as="div" className="relative inline-block text-left">
       <div>
@@ -38,22 +49,34 @@ export default function MenuComponent({ onReset }: { onReset: () => void }) {
             </Menu.Item>
             <Menu.Item>
               {({ active }) => (
-                <a
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  href="https://www.twitter.com/_benjamintd"
+                <button
                   className={classNames(
                     active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                    "block px-4 py-2 text-sm"
+                    "block px-4 py-2 text-sm text-left w-full"
                   )}
+                  onClick={() => hideLabels(!labelsHidden)}
+                >
+                  {labelsHidden ? "Afficher" : "Cacher"} les labels
+                </button>
+              )}
+            </Menu.Item>
+            <Menu.Item>
+              {({ active }) => (
+                <button
+                  className={classNames(
+                    active ? "bg-gray-100 text-gray-900" : "text-gray-700",
+                    "block px-4 py-2 text-sm text-left w-full"
+                  )}
+                  onClick={() => setModalOpen(true)}
                 >
                   À propos
-                </a>
+                </button>
               )}
             </Menu.Item>
           </div>
         </Menu.Items>
       </Transition>
+      <AboutModal open={modalOpen} setOpen={setModalOpen} />
     </Menu>
   );
 }
