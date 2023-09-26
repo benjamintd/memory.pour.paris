@@ -393,7 +393,7 @@ export default function Home() {
             "text-halo-color": [
               "case",
               ["to-boolean", ["feature-state", "found"]],
-              "rgba(255, 255, 255, 0.8)",
+              "rgb(255, 255, 255)",
               "rgba(0, 0, 0, 0)",
             ],
             "text-halo-width": 2,
@@ -401,7 +401,7 @@ export default function Home() {
             "text-color": [
               "case",
               ["to-boolean", ["feature-state", "found"]],
-              "rgb(103, 114, 126)",
+              "rgb(120, 132, 127)",
               "rgba(0, 0, 0, 0)",
             ],
           },
