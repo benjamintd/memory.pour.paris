@@ -1,9 +1,21 @@
 import "./globals.css";
 import { Metadata } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 
-const inter = Inter({ subsets: ["latin"] });
-
+const font = localFont({
+  src: [
+    {
+      path: "../fonts/sans.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../fonts/sans-bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+});
 export const metadata: Metadata = {
   title: "Les rues de Paris",
   description: "Quel pourcentage des rues de Paris connaissez-vous ?",
@@ -16,7 +28,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body className={inter.className}>{children}</body>
+      <body className={font.className}>{children}</body>
     </html>
   );
 }
