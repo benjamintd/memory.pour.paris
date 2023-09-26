@@ -292,7 +292,15 @@ export default function Home() {
           source: "paris",
           id: "metro-circles",
           paint: {
-            "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 1, 16, 4],
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              9,
+              ["case", ["to-boolean", ["feature-state", "found"]], 2, 1],
+              16,
+              ["case", ["to-boolean", ["feature-state", "found"]], 6, 4],
+            ],
             "circle-color": [
               "case",
               ["to-boolean", ["feature-state", "found"]],
@@ -447,13 +455,18 @@ export default function Home() {
           },
         });
 
-        mapboxMap.once("idle", () => setMap(mapboxMap));
+        mapboxMap.once("data", () => {
+          console.log("firing");
+          setMap(mapboxMap);
+        });
       });
     }
   }, [map]);
 
   useEffect(() => {
+    console.log("effect", map, found);
     if (!map || !found) return;
+    console.log("feature-state");
 
     map.removeFeatureState({ source: "paris" });
 
@@ -535,6 +548,13 @@ export default function Home() {
           })}
         </div>
         <hr className="w-full border-b border-blue-100 my-4" />
+        <p className="text-sm uppercase text-blue-700">
+          {(found || []).length} éléments trouvés
+        </p>
+        <p className="text-xs uppercase text-blue-700 mb-4">
+          {(foundStreetsPercentage * fc.properties.totalLength).toFixed(1)} km
+          de rues
+        </p>
         <ol>
           {(found || []).map((id) => {
             const feature = idMap.get(id);
@@ -566,7 +586,14 @@ export default function Home() {
                 ) : (
                   <StreetIcon className="w-5 h-5 mr-2" />
                 )}
-                {feature.properties.long_name || feature.properties.name}
+                <span className="max-w-md truncate">
+                  {feature.properties.long_name || feature.properties.name}
+                </span>
+                {feature.properties.length && (
+                  <span className="font-sans font-light opacity-80 ml-auto">
+                    {feature.properties.length.toFixed(1)} km
+                  </span>
+                )}
               </Transition>
             );
           })}

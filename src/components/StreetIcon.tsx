@@ -13,7 +13,7 @@ const StreetIcon = ({ className }: { className: string }) => {
         height="79"
         fill="#1E3A8A"
         stroke="#648D40"
-        stroke-width="20"
+        strokeWidth="20"
       />
       <path
         d="M39 53.6842V66H142V53.6842C130 53.6842 129 27.0001 90.5 27C52 26.9999 51 53.6842 39 53.6842Z"
