@@ -122,6 +122,7 @@ export default function Home() {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
   const [search, setSearch] = useState<string>("");
   const [hideLabels, setHideLabels] = useState<boolean>(false);
+  const [wrong, setWrong] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const idMap = useMemo(() => {
@@ -248,11 +249,17 @@ export default function Home() {
         }
       }
 
+      if (matches.length === 0) {
+        setWrong(true);
+        setTimeout(() => setWrong(false), 500);
+        return;
+      }
+
       setFound([...matches, ...(found || [])]);
 
       setSearch("");
     },
-    [search, setSearch, fuse, found, setFound]
+    [search, setSearch, fuse, found, setFound, setWrong]
   );
 
   useEffect(() => {
@@ -558,7 +565,10 @@ export default function Home() {
         <div className="absolute top-0 left-0 w-full h-full" id="map" />
         <div className="absolute w-96 max-w-screen h-12 top-32 flex gap-4">
           <input
-            className="grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
+            className={classNames(
+              { "animate animate-shake": wrong },
+              "grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
+            )}
             ref={inputRef}
             placeholder="Rue ou station de métro"
             value={search}

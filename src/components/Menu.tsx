@@ -56,7 +56,7 @@ export default function MenuComponent({
                   )}
                   onClick={() => setHideLabels(!hideLabels)}
                 >
-                  {hideLabels ? "Afficher" : "Cacher"} les labels
+                  {hideLabels ? "Afficher" : "Cacher"} les solutions
                 </button>
               )}
             </Menu.Item>
