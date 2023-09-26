@@ -208,7 +208,7 @@ export default function Home() {
           "properties.name",
         ],
         minMatchCharLength: 2,
-        threshold: 0.1,
+        threshold: 0.15,
         distance: 10,
         getFn: (obj, path) => {
           const value = Fuse.config.getFn(obj, path);
@@ -233,13 +233,13 @@ export default function Home() {
       const matches: number[] = [];
       for (let i = 0; i < results.length; i++) {
         const result = results[i];
-
+        console.log(result);
         if (
           result.matches &&
           result.matches.length &&
           result.matches.some(
             (match) =>
-              match.indices[0][0] < 2 &&
+              match.indices[0][0] < 3 &&
               match.value!.length - match.indices[match.indices.length - 1][1] <
                 3
           ) &&
@@ -656,7 +656,7 @@ export default function Home() {
             </p>
           </>
         )}
-        <ol className={classNames({ "transition-all blur-xl": hideLabels })}>
+        <ol className={classNames({ "transition-all blur-md": hideLabels })}>
           {(found || []).map((id) => {
             const feature = idMap.get(id);
             if (!feature) return null;
