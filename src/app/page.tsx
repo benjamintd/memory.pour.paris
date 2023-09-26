@@ -22,6 +22,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "react-circular-progressbar/dist/styles.css";
 import StreetIcon from "@/components/StreetIcon";
 import MenuComponent from "@/components/Menu";
+import removeAccents from "@/lib/removeAccents";
 
 const fc = data as FeatureCollection<
   LineString | MultiLineString | Point,
@@ -602,11 +603,3 @@ export default function Home() {
     </main>
   );
 }
-
-export const removeAccents = (str?: string) =>
-  (str || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036F]/g, "")
-    .replace(/st /g, "saint ")
-    .replace(/st-/g, "saint-");
