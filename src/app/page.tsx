@@ -121,7 +121,7 @@ const LINE_NAMES: { [key: string]: string } = {
 export default function Home() {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
   const [search, setSearch] = useState<string>("");
-  const [labelsHidden, hideLabels] = useState<boolean>(false);
+  const [hideLabels, setHideLabels] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const idMap = useMemo(() => {
@@ -147,11 +147,14 @@ export default function Home() {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (map && labelsHidden) {
+    if (map && hideLabels) {
       map.setLayoutProperty("voies-labels", "visibility", "none");
       map.setLayoutProperty("metro-labels", "visibility", "none");
+    } else if (map) {
+      map.setLayoutProperty("voies-labels", "visibility", "visible");
+      map.setLayoutProperty("metro-labels", "visibility", "visible");
     }
-  }, [labelsHidden, map]);
+  }, [hideLabels, map]);
 
   const onReset = useCallback(() => {
     if (confirm("Vous allez perdre votre progression. Êtes-vous sûr ?")) {
@@ -569,7 +572,7 @@ export default function Home() {
           <MenuComponent
             onReset={onReset}
             hideLabels={hideLabels}
-            labelsHidden={labelsHidden}
+            setHideLabels={setHideLabels}
           />
         </div>
       </div>
@@ -643,7 +646,7 @@ export default function Home() {
             </p>
           </>
         )}
-        <ol>
+        <ol className={classNames({ "transition-all blur-xl": hideLabels })}>
           {(found || []).map((id) => {
             const feature = idMap.get(id);
             if (!feature) return null;

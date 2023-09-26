@@ -6,12 +6,12 @@ import AboutModal from "./AboutModal";
 
 export default function MenuComponent({
   onReset,
-  labelsHidden,
+  setHideLabels,
   hideLabels,
 }: {
   onReset: () => void;
-  labelsHidden: boolean;
-  hideLabels: (hide: boolean) => void;
+  hideLabels: boolean;
+  setHideLabels: (hide: boolean) => void;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -54,9 +54,9 @@ export default function MenuComponent({
                     active ? "bg-gray-100 text-gray-900" : "text-gray-700",
                     "block px-4 py-2 text-sm text-left w-full"
                   )}
-                  onClick={() => hideLabels(!labelsHidden)}
+                  onClick={() => setHideLabels(!hideLabels)}
                 >
-                  {labelsHidden ? "Afficher" : "Cacher"} les labels
+                  {hideLabels ? "Afficher" : "Cacher"} les labels
                 </button>
               )}
             </Menu.Item>
