@@ -131,13 +131,19 @@ export default function Home() {
     return map;
   }, []);
 
-  const { value: found, set: setFound } = useLocalStorageValue<number[]>(
+  const { value: localFound, set: setFound } = useLocalStorageValue<number[]>(
     "paris-streets",
     {
       defaultValue: [],
       initializeWithValue: false,
     }
   );
+
+  const found: number[] = useMemo(() => {
+    return localFound || [];
+  }, [localFound]);
+
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
 
   const onReset = useCallback(() => {
     if (confirm("Vous allez perdre votre progression. Êtes-vous sûr ?")) {
@@ -244,7 +250,7 @@ export default function Home() {
 
       const mapboxMap = new mapboxgl.Map({
         container: "map",
-        style: "mapbox://styles/benjamintd/clmyn184e02ty01r49vd07lm1",
+        style: "mapbox://styles/benjamintd/cln0odb5h02ys01quh46uf8he",
         bounds: [
           [2.21, 48.815573],
           [2.47, 48.91],
@@ -258,6 +264,41 @@ export default function Home() {
           data: fc,
         });
 
+        mapboxMap.addSource("hovered", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: [],
+          },
+        });
+
+        mapboxMap.addLayer({
+          id: "metro-hovered",
+          type: "circle",
+          paint: {
+            "circle-radius": 16,
+            "circle-color": "#fde047",
+            "circle-blur-transition": {
+              duration: 100,
+            },
+            "circle-blur": 1,
+          },
+          source: "hovered",
+          filter: ["==", "$type", "Point"],
+        });
+
+        mapboxMap.addLayer({
+          id: "voies-hover",
+          type: "line",
+          paint: {
+            "line-color": "#fde047",
+            "line-width": 16,
+            "line-blur": 10,
+          },
+          source: "hovered",
+          filter: ["==", "$type", "LineString"],
+        });
+
         mapboxMap.addLayer({
           id: "voies",
           type: "line",
@@ -265,8 +306,8 @@ export default function Home() {
             "line-color": [
               "case",
               ["to-boolean", ["feature-state", "found"]],
-              "#1c6dca",
-              "rgb(208, 216, 225)",
+              "#2563eb",
+              "rgba(230, 235, 239, 0)",
             ],
             "line-width": [
               "interpolate",
@@ -457,15 +498,38 @@ export default function Home() {
         });
 
         mapboxMap.once("data", () => {
-          setMap(mapboxMap);
+          setMap((map) => (map === null ? mapboxMap : map));
         });
 
         mapboxMap.once("idle", () => {
-          setMap(mapboxMap);
+          setMap((map) => (map === null ? mapboxMap : map));
+          mapboxMap.on("mousemove", ["voies", "metro-circles"], (e) => {
+            if (e.features && e.features.length > 0) {
+              const feature = e.features.find((f) => f.state.found && f.id);
+              if (feature && feature.id) {
+                return setHoveredId(feature.id as number);
+              }
+            }
+
+            setHoveredId(null);
+          });
+
+          mapboxMap.on("mouseleave", ["voies", "metro-circles"], () => {
+            setHoveredId(null);
+          });
         });
       });
     }
   }, [map]);
+
+  useEffect(() => {
+    if (!map) return;
+
+    (map.getSource("hovered") as mapboxgl.GeoJSONSource).setData({
+      type: "FeatureCollection",
+      features: hoveredId ? [idMap.get(hoveredId)!] : [],
+    });
+  }, [map, hoveredId, idMap]);
 
   useEffect(() => {
     if (!map || !found) return;
@@ -498,8 +562,11 @@ export default function Home() {
         </div>
       </div>
       <div className="h-full p-6 overflow-y-auto xl:w-[32rem] lg:w-96 hidden shadow-lg lg:block bg-blue-50">
-        <p className="text-xl font-bold">
-          {(foundStreetsPercentage * 100).toFixed(1)}%
+        <p className="text-xl">
+          <span className="text-2xl   font-bold">
+            {(foundStreetsPercentage * 100).toFixed(1)}
+          </span>{" "}
+          %
         </p>
         <p className="text-sm mb-2">kilomètres de rues trouvés</p>
         <div className="w-full grid grid-cols-[20] grid-rows-1 grid-flow-col gap-1 mb-4">
@@ -513,8 +580,11 @@ export default function Home() {
             ></div>
           ))}
         </div>
-        <p className="text-xl font-bold">
-          {(foundStationsPercentage * 100).toFixed(1)}%
+        <p className="text-xl">
+          <span className="text-2xl font-bold">
+            {(foundStationsPercentage * 100).toFixed(1)}
+          </span>{" "}
+          %
         </p>
         <p className="text-sm mb-2">des stations de métro trouvées</p>
         <div className="grid grid-cols-[8] grid-rows-2 grid-flow-col gap-1 mb-4">
@@ -522,7 +592,7 @@ export default function Home() {
             return (
               <div
                 key={line}
-                className="relative lg:h-8 xl:h-12 aspect-square flex items-center justify-center"
+                className="relative lg:h-8 xl:h-10 aspect-square flex items-center justify-center"
               >
                 <div className="absolute w-full h-full z-20">
                   <CircularProgressbar
@@ -550,10 +620,10 @@ export default function Home() {
           })}
         </div>
         <hr className="w-full border-b border-blue-100 my-4" />
-        {found?.length && (
+        {(found || []).length > 0 && (
           <>
             <p className="text-sm uppercase text-blue-900">
-              {found.length} éléments trouvés
+              {found.length} éléments
             </p>
             <p className="text-xs uppercase text-blue-900 mb-4">
               {(foundStreetsPercentage * fc.properties.totalLength).toFixed(1)}{" "}
@@ -571,35 +641,45 @@ export default function Home() {
                 as="li"
                 key={id}
                 show={true}
-                className="text-sm flex items-center"
                 enter="transition-all duration-250"
                 enterFrom="h-0 opacity-0"
-                enterTo="h-6 opacity-100"
+                enterTo="h-8 opacity-100"
                 leave="transition-opacity duration-250"
-                leaveFrom="h-6 opacity-100"
+                leaveFrom="h-8 opacity-100"
                 leaveTo="h-0 opacity-0"
               >
-                {feature.properties.line ? (
-                  <span
-                    className="w-5 h-5 rounded-full font-bold text-xs flex items-center justify-center mr-2"
-                    style={{
-                      backgroundColor: METRO_COLORS[feature.properties.line],
-                      color: METRO_TEXT_COLORS[feature.properties.line],
-                    }}
-                  >
-                    {LINE_NAMES[feature.properties.line]}
+                <div
+                  onMouseOver={() => setHoveredId(id)}
+                  onMouseOut={() => setHoveredId(null)}
+                  className={classNames(
+                    "w-full rounded text-sm flex items-center px-2 py-1",
+                    {
+                      "bg-yellow-400 shadow-sm": feature.id === hoveredId,
+                    }
+                  )}
+                >
+                  {feature.properties.line ? (
+                    <span
+                      className="w-5 h-5 rounded-full font-bold text-xs flex items-center justify-center mr-2"
+                      style={{
+                        backgroundColor: METRO_COLORS[feature.properties.line],
+                        color: METRO_TEXT_COLORS[feature.properties.line],
+                      }}
+                    >
+                      {LINE_NAMES[feature.properties.line]}
+                    </span>
+                  ) : (
+                    <StreetIcon className="w-5 h-5 mr-2" />
+                  )}
+                  <span className="max-w-md truncate">
+                    {feature.properties.long_name || feature.properties.name}
                   </span>
-                ) : (
-                  <StreetIcon className="w-5 h-5 mr-2" />
-                )}
-                <span className="max-w-md truncate">
-                  {feature.properties.long_name || feature.properties.name}
-                </span>
-                {feature.properties.length && (
-                  <span className="font-sans font-light opacity-80 ml-auto">
-                    {feature.properties.length.toFixed(1)} km
-                  </span>
-                )}
+                  {feature.properties.length > 0 && (
+                    <span className="font-sans font-light opacity-80 ml-auto">
+                      {feature.properties.length.toFixed(1)} km
+                    </span>
+                  )}
+                </div>
               </Transition>
             );
           })}
