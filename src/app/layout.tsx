@@ -1,3 +1,4 @@
+import Analytics from "@/components/Analytics";
 import "./globals.css";
 import { Metadata } from "next";
 import localFont from "next/font/local";
@@ -31,6 +32,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={font.className}>{children}</body>
+      <Analytics />
     </html>
   );
 }
