@@ -19,7 +19,8 @@ const font = localFont({
 });
 export const metadata: Metadata = {
   title: "Les rues de Paris",
-  description: "Quel pourcentage des rues de Paris connaissez-vous de tête ?",
+  description:
+    "Quel pourcentage des rues et stations de métro de Paris connaissez-vous de tête ?",
 };
 
 export default function RootLayout({
