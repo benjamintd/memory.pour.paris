@@ -22,6 +22,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "react-circular-progressbar/dist/styles.css";
 import StreetIcon from "@/components/StreetIcon";
 import MenuComponent from "@/components/Menu";
+import IntroModal from "@/components/IntroModal";
 import removeAccents from "@/lib/removeAccents";
 
 const fc = data as FeatureCollection<
@@ -141,6 +142,12 @@ export default function Home() {
     }
   );
 
+  const { value: isNewPlayer, set: setIsNewPlayer } =
+    useLocalStorageValue<boolean>("paris-streets-is-new-player", {
+      defaultValue: true,
+      initializeWithValue: false,
+    });
+
   const found: number[] = useMemo(() => {
     return localFound || [];
   }, [localFound]);
@@ -160,8 +167,9 @@ export default function Home() {
   const onReset = useCallback(() => {
     if (confirm("Vous allez perdre votre progression. Êtes-vous sûr ?")) {
       setFound([]);
+      setIsNewPlayer(true);
     }
-  }, [setFound]);
+  }, [setFound, setIsNewPlayer]);
 
   const foundStreetsPercentage = useMemo(() => {
     return sumBy(
@@ -256,289 +264,291 @@ export default function Home() {
       }
 
       setFound([...matches, ...(found || [])]);
-
+      setIsNewPlayer(false);
       setSearch("");
     },
-    [search, setSearch, fuse, found, setFound, setWrong]
+    [search, setSearch, fuse, found, setFound, setWrong, setIsNewPlayer]
   );
 
   useEffect(() => {
-    if (!map) {
-      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
+    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
-      const mapboxMap = new mapboxgl.Map({
-        container: "map",
-        style: "mapbox://styles/benjamintd/cln0odb5h02ys01quh46uf8he",
-        bounds: [
-          [2.21, 48.815573],
-          [2.47, 48.91],
-        ],
-        minZoom: 11,
+    const mapboxMap = new mapboxgl.Map({
+      container: "map",
+      style: "mapbox://styles/benjamintd/cln0odb5h02ys01quh46uf8he",
+      bounds: [
+        [2.21, 48.815573],
+        [2.47, 48.91],
+      ],
+      minZoom: 11,
+    });
+
+    mapboxMap.on("load", () => {
+      mapboxMap.addSource("paris", {
+        type: "geojson",
+        data: fc,
       });
 
-      mapboxMap.on("load", () => {
-        mapboxMap.addSource("paris", {
-          type: "geojson",
-          data: fc,
-        });
+      mapboxMap.addSource("hovered", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: [],
+        },
+      });
 
-        mapboxMap.addSource("hovered", {
-          type: "geojson",
-          data: {
-            type: "FeatureCollection",
-            features: [],
+      mapboxMap.addLayer({
+        id: "metro-hovered",
+        type: "circle",
+        paint: {
+          "circle-radius": 16,
+          "circle-color": "#fde047",
+          "circle-blur-transition": {
+            duration: 100,
           },
-        });
+          "circle-blur": 1,
+        },
+        source: "hovered",
+        filter: ["==", "$type", "Point"],
+      });
 
-        mapboxMap.addLayer({
-          id: "metro-hovered",
-          type: "circle",
-          paint: {
-            "circle-radius": 16,
-            "circle-color": "#fde047",
-            "circle-blur-transition": {
-              duration: 100,
-            },
-            "circle-blur": 1,
-          },
-          source: "hovered",
-          filter: ["==", "$type", "Point"],
-        });
+      mapboxMap.addLayer({
+        id: "voies-hover",
+        type: "line",
+        paint: {
+          "line-color": "#fde047",
+          "line-width": 16,
+          "line-blur": 10,
+        },
+        source: "hovered",
+        filter: ["==", "$type", "LineString"],
+      });
 
-        mapboxMap.addLayer({
-          id: "voies-hover",
-          type: "line",
-          paint: {
-            "line-color": "#fde047",
-            "line-width": 16,
-            "line-blur": 10,
-          },
-          source: "hovered",
-          filter: ["==", "$type", "LineString"],
-        });
+      mapboxMap.addLayer({
+        id: "voies",
+        type: "line",
+        paint: {
+          "line-color": [
+            "case",
+            ["to-boolean", ["feature-state", "found"]],
+            "#2563eb",
+            "rgba(230, 235, 239, 0)",
+          ],
+          "line-width": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            12,
+            ["case", ["to-boolean", ["feature-state", "found"]], 2, 1],
+            16,
+            ["case", ["to-boolean", ["feature-state", "found"]], 6, 4],
+          ],
+        },
+        layout: {
+          "line-join": "round",
+          "line-cap": "round",
+          "line-sort-key": ["get", "length"],
+        },
+        source: "paris",
+        filter: ["==", "$type", "LineString"],
+      });
 
-        mapboxMap.addLayer({
-          id: "voies",
-          type: "line",
-          paint: {
-            "line-color": [
-              "case",
-              ["to-boolean", ["feature-state", "found"]],
-              "#2563eb",
-              "rgba(230, 235, 239, 0)",
-            ],
-            "line-width": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              12,
-              ["case", ["to-boolean", ["feature-state", "found"]], 2, 1],
-              16,
-              ["case", ["to-boolean", ["feature-state", "found"]], 6, 4],
-            ],
-          },
-          layout: {
-            "line-join": "round",
-            "line-cap": "round",
-            "line-sort-key": ["get", "length"],
-          },
-          source: "paris",
-          filter: ["==", "$type", "LineString"],
-        });
-
-        mapboxMap.addLayer({
-          filter: ["match", ["get", "type"], ["metro"], true, false],
-          type: "circle",
-          source: "paris",
-          id: "metro-circles",
-          paint: {
-            "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              9,
-              ["case", ["to-boolean", ["feature-state", "found"]], 2, 1],
-              16,
-              ["case", ["to-boolean", ["feature-state", "found"]], 6, 4],
-            ],
-            "circle-color": [
-              "case",
-              ["to-boolean", ["feature-state", "found"]],
-              [
-                "match",
-                ["get", "line"],
-                ["METRO 1"],
-                "#ffce00",
-                ["METRO 2"],
-                "#0064b0",
-                ["METRO 3"],
-                "#9f9825",
-                ["METRO 3bis"],
-                "#98d4e2",
-                ["METRO 4"],
-                "#c04191",
-                ["METRO 5"],
-                "#f28e42",
-                ["METRO 6"],
-                "#83c491",
-                ["METRO 7"],
-                "#f3a4ba",
-                ["METRO 7bis"],
-                "#83c491",
-                ["METRO 8"],
-                "#ceadd2",
-                ["METRO 9"],
-                "#d5c900",
-                ["METRO 10"],
-                "#e3b32a",
-                ["METRO 11"],
-                "#8d5e2a",
-                ["METRO 12"],
-                "#00814f",
-                ["METRO 13"],
-                "#98d4e2",
-                ["METRO 14"],
-                "#662483",
-                "rgba(255, 255, 255, 0.8)",
-              ],
+      mapboxMap.addLayer({
+        filter: ["match", ["get", "type"], ["metro"], true, false],
+        type: "circle",
+        source: "paris",
+        id: "metro-circles",
+        paint: {
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            9,
+            ["case", ["to-boolean", ["feature-state", "found"]], 2, 1],
+            16,
+            ["case", ["to-boolean", ["feature-state", "found"]], 6, 4],
+          ],
+          "circle-color": [
+            "case",
+            ["to-boolean", ["feature-state", "found"]],
+            [
+              "match",
+              ["get", "line"],
+              ["METRO 1"],
+              "#ffce00",
+              ["METRO 2"],
+              "#0064b0",
+              ["METRO 3"],
+              "#9f9825",
+              ["METRO 3bis"],
+              "#98d4e2",
+              ["METRO 4"],
+              "#c04191",
+              ["METRO 5"],
+              "#f28e42",
+              ["METRO 6"],
+              "#83c491",
+              ["METRO 7"],
+              "#f3a4ba",
+              ["METRO 7bis"],
+              "#83c491",
+              ["METRO 8"],
+              "#ceadd2",
+              ["METRO 9"],
+              "#d5c900",
+              ["METRO 10"],
+              "#e3b32a",
+              ["METRO 11"],
+              "#8d5e2a",
+              ["METRO 12"],
+              "#00814f",
+              ["METRO 13"],
+              "#98d4e2",
+              ["METRO 14"],
+              "#662483",
               "rgba(255, 255, 255, 0.8)",
             ],
-            "circle-stroke-color": [
-              "case",
-              ["to-boolean", ["feature-state", "found"]],
-              [
-                "match",
-                ["get", "line"],
-                ["METRO 1"],
-                "#806700",
-                ["METRO 2"],
-                "#003258",
-                ["METRO 3"],
-                "#4f4c12",
-                ["METRO 3bis"],
-                "#2a7f93",
-                ["METRO 4"],
-                "#602049",
-                ["METRO 5"],
-                "#90440a",
-                ["METRO 6"],
-                "#356f41",
-                ["METRO 7"],
-                "#b41843",
-                ["METRO 7bis"],
-                "#356f41",
-                ["METRO 8"],
-                "#76447c",
-                ["METRO 9"],
-                "#6a6400",
-                ["METRO 10"],
-                "#775c10",
-                ["METRO 11"],
-                "#462f15",
-                ["METRO 12"],
-                "#004027",
-                ["METRO 13"],
-                "#2a7f93",
-                ["METRO 14"],
-                "#331241",
-                "rgba(255, 255, 255, 0.8)",
-              ],
+            "rgba(255, 255, 255, 0.8)",
+          ],
+          "circle-stroke-color": [
+            "case",
+            ["to-boolean", ["feature-state", "found"]],
+            [
+              "match",
+              ["get", "line"],
+              ["METRO 1"],
+              "#806700",
+              ["METRO 2"],
+              "#003258",
+              ["METRO 3"],
+              "#4f4c12",
+              ["METRO 3bis"],
+              "#2a7f93",
+              ["METRO 4"],
+              "#602049",
+              ["METRO 5"],
+              "#90440a",
+              ["METRO 6"],
+              "#356f41",
+              ["METRO 7"],
+              "#b41843",
+              ["METRO 7bis"],
+              "#356f41",
+              ["METRO 8"],
+              "#76447c",
+              ["METRO 9"],
+              "#6a6400",
+              ["METRO 10"],
+              "#775c10",
+              ["METRO 11"],
+              "#462f15",
+              ["METRO 12"],
+              "#004027",
+              ["METRO 13"],
+              "#2a7f93",
+              ["METRO 14"],
+              "#331241",
               "rgba(255, 255, 255, 0.8)",
             ],
-            "circle-stroke-width": [
-              "case",
-              ["to-boolean", ["feature-state", "found"]],
-              1,
-              0,
-            ],
-          },
-        });
+            "rgba(255, 255, 255, 0.8)",
+          ],
+          "circle-stroke-width": [
+            "case",
+            ["to-boolean", ["feature-state", "found"]],
+            1,
+            0,
+          ],
+        },
+      });
 
-        mapboxMap.addLayer({
-          id: "voies-labels",
-          type: "symbol",
-          paint: {
-            "text-halo-color": [
-              "case",
-              ["to-boolean", ["feature-state", "found"]],
-              "rgb(255, 255, 255)",
-              "rgba(0, 0, 0, 0)",
-            ],
-            "text-halo-width": 2,
-            "text-halo-blur": 1,
-            "text-color": [
-              "case",
-              ["to-boolean", ["feature-state", "found"]],
-              "rgb(120, 132, 127)",
-              "rgba(0, 0, 0, 0)",
-            ],
-          },
-          layout: {
-            "text-field": ["to-string", ["get", "short_name"]],
-            "text-font": ["Parisine Regular", "Arial Unicode MS Regular"],
-            "symbol-placement": "line",
-            "symbol-avoid-edges": true,
-            "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 22, 16],
-          },
-          source: "paris",
-          filter: ["==", "$type", "LineString"],
-        });
+      mapboxMap.addLayer({
+        id: "voies-labels",
+        type: "symbol",
+        paint: {
+          "text-halo-color": [
+            "case",
+            ["to-boolean", ["feature-state", "found"]],
+            "rgb(255, 255, 255)",
+            "rgba(0, 0, 0, 0)",
+          ],
+          "text-halo-width": 2,
+          "text-halo-blur": 1,
+          "text-color": [
+            "case",
+            ["to-boolean", ["feature-state", "found"]],
+            "rgb(120, 132, 127)",
+            "rgba(0, 0, 0, 0)",
+          ],
+        },
+        layout: {
+          "text-field": ["to-string", ["get", "short_name"]],
+          "text-font": ["Parisine Regular", "Arial Unicode MS Regular"],
+          "symbol-placement": "line",
+          "symbol-avoid-edges": true,
+          "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 22, 16],
+        },
+        source: "paris",
+        filter: ["==", "$type", "LineString"],
+      });
 
-        mapboxMap.addLayer({
-          minzoom: 11,
-          layout: {
-            "text-field": ["to-string", ["get", "name"]],
-            "text-font": ["Parisine Regular", "Arial Unicode MS Regular"],
-            "text-anchor": "bottom",
-            "text-offset": [0, -0.5],
-            "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 22, 14],
-          },
-          filter: ["match", ["get", "type"], ["metro"], true, false],
-          type: "symbol",
-          source: "paris",
-          id: "metro-labels",
-          paint: {
-            "text-color": [
-              "case",
-              ["to-boolean", ["feature-state", "found"]],
-              "rgb(29, 40, 53)",
-              "rgba(0, 0, 0, 0)",
-            ],
-            "text-halo-color": [
-              "case",
-              ["to-boolean", ["feature-state", "found"]],
-              "rgba(255, 255, 255, 0.8)",
-              "rgba(0, 0, 0, 0)",
-            ],
-            "text-halo-blur": 1,
-            "text-halo-width": 1,
-          },
-        });
+      mapboxMap.addLayer({
+        minzoom: 11,
+        layout: {
+          "text-field": ["to-string", ["get", "name"]],
+          "text-font": ["Parisine Regular", "Arial Unicode MS Regular"],
+          "text-anchor": "bottom",
+          "text-offset": [0, -0.5],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 22, 14],
+        },
+        filter: ["match", ["get", "type"], ["metro"], true, false],
+        type: "symbol",
+        source: "paris",
+        id: "metro-labels",
+        paint: {
+          "text-color": [
+            "case",
+            ["to-boolean", ["feature-state", "found"]],
+            "rgb(29, 40, 53)",
+            "rgba(0, 0, 0, 0)",
+          ],
+          "text-halo-color": [
+            "case",
+            ["to-boolean", ["feature-state", "found"]],
+            "rgba(255, 255, 255, 0.8)",
+            "rgba(0, 0, 0, 0)",
+          ],
+          "text-halo-blur": 1,
+          "text-halo-width": 1,
+        },
+      });
 
-        mapboxMap.once("data", () => {
-          setMap((map) => (map === null ? mapboxMap : map));
-        });
+      mapboxMap.once("data", () => {
+        setMap((map) => (map === null ? mapboxMap : map));
+      });
 
-        mapboxMap.once("idle", () => {
-          setMap((map) => (map === null ? mapboxMap : map));
-          mapboxMap.on("mousemove", ["voies", "metro-circles"], (e) => {
-            if (e.features && e.features.length > 0) {
-              const feature = e.features.find((f) => f.state.found && f.id);
-              if (feature && feature.id) {
-                return setHoveredId(feature.id as number);
-              }
+      mapboxMap.once("idle", () => {
+        setMap((map) => (map === null ? mapboxMap : map));
+        mapboxMap.on("mousemove", ["voies", "metro-circles"], (e) => {
+          if (e.features && e.features.length > 0) {
+            const feature = e.features.find((f) => f.state.found && f.id);
+            if (feature && feature.id) {
+              return setHoveredId(feature.id as number);
             }
+          }
 
-            setHoveredId(null);
-          });
+          setHoveredId(null);
+        });
 
-          mapboxMap.on("mouseleave", ["voies", "metro-circles"], () => {
-            setHoveredId(null);
-          });
+        mapboxMap.on("mouseleave", ["voies", "metro-circles"], () => {
+          setHoveredId(null);
         });
       });
-    }
-  }, [map]);
+    });
+
+    return () => {
+      mapboxMap.remove();
+    };
+  }, [setMap]);
 
   useEffect(() => {
     if (!map) return;
@@ -567,7 +577,7 @@ export default function Home() {
           <input
             className={classNames(
               { "animate animate-shake": wrong },
-              "grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
+              "z-30 grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
             )}
             ref={inputRef}
             placeholder="Rue ou station de métro"
@@ -710,6 +720,11 @@ export default function Home() {
           })}
         </ol>
       </div>
+      <IntroModal
+        inputRef={inputRef}
+        open={isNewPlayer}
+        setOpen={setIsNewPlayer}
+      />
     </main>
   );
 }

@@ -66,7 +66,7 @@ export default function AboutModal({
                         >
                           Chris Arvin
                         </a>{" "}
-                        qui a créé ce jeu pour San&nbsp;Francisco.
+                        qui a créé ce jeu pour San Francisco.
                       </p>
                     </div>
                   </div>
