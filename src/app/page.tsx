@@ -577,7 +577,7 @@ export default function Home() {
           <input
             className={classNames(
               { "animate animate-shake": wrong },
-              "z-30 grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
+              "z-40 grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
             )}
             ref={inputRef}
             placeholder="Rue ou station de métro"
@@ -629,7 +629,7 @@ export default function Home() {
                 key={line}
                 className="relative lg:h-8 xl:h-10 aspect-square flex items-center justify-center"
               >
-                <div className="absolute w-full h-full z-20">
+                <div className="absolute w-full h-full z-10">
                   <CircularProgressbar
                     background
                     backgroundPadding={2}
@@ -645,7 +645,7 @@ export default function Home() {
                   />
                 </div>
                 <span
-                  className="block text-lg font-bold z-30"
+                  className="block text-lg font-bold z-20"
                   style={{ color: METRO_TEXT_COLORS[line] }}
                 >
                   {LINE_NAMES[line]}

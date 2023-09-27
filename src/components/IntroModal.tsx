@@ -14,7 +14,7 @@ export default function IntroModal({
   inputRef.current?.focus();
   return (
     <Transition.Root show={!!open} as={Fragment}>
-      <div className="relative z-20 font-sans" onClick={() => setOpen(false)}>
+      <div className="relative z-30 font-sans" onClick={() => setOpen(false)}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -24,7 +24,7 @@ export default function IntroModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-700 bg-opacity-75 transition-opacity" />
+          <div className="fixed inset-0 bg-gray-700 bg-opacity-80 transition-opacity" />
         </Transition.Child>
 
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
