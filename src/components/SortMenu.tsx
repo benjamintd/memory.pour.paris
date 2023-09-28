@@ -2,20 +2,17 @@ import React, { Fragment, ReactNode } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { SortIcon } from "./SortIcon";
 import { CheckIcon } from "./CheckIcon";
-import { SortOption } from "@/lib/types";
+import { SortOption, SortOptionType } from "@/lib/types";
+import classNames from "classnames";
 
 export default function SortMenu({
   sortOptions,
   setSort,
   sort,
 }: {
-  sortOptions: {
-    name: string;
-    id: SortOption;
-    shortName: ReactNode;
-  }[];
-  setSort: (sort: SortOption) => void;
-  sort: SortOption;
+  sortOptions: SortOption[];
+  setSort: (sort: SortOptionType) => void;
+  sort: SortOptionType;
 }) {
   return (
     <div className="h-8 w-16">
@@ -37,32 +34,7 @@ export default function SortMenu({
           >
             <Listbox.Options className="absolute mt-1 max-h-60 w-72 z-30 right-0 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
               {sortOptions.map((option) => (
-                <Listbox.Option
-                  key={option.id}
-                  className={({ active }) =>
-                    `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                      active ? "bg-blue-100 text-blue-900" : "text-gray-900"
-                    }`
-                  }
-                  value={option.id}
-                >
-                  {({ selected }) => (
-                    <>
-                      <span
-                        className={`block truncate ${
-                          selected ? "font-medium" : "font-normal"
-                        }`}
-                      >
-                        {option.name}
-                      </span>
-                      {selected ? (
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                        </span>
-                      ) : null}
-                    </>
-                  )}
-                </Listbox.Option>
+                <Option key={option.id} option={option} />
               ))}
             </Listbox.Options>
           </Transition>
@@ -71,3 +43,34 @@ export default function SortMenu({
     </div>
   );
 }
+
+const Option = ({ option }: { option: SortOption }) => {
+  return (
+    <Listbox.Option value={option.id as string}>
+      {({ selected, active }) => (
+        <li
+          className={classNames(
+            "relative cursor-default select-none py-2 pl-10 pr-4",
+            {
+              "bg-blue-100 text-blue-900": active,
+              "text-gray-900": !active,
+            }
+          )}
+        >
+          <span
+            className={`block truncate ${
+              selected ? "font-medium" : "font-normal"
+            }`}
+          >
+            {option.name}
+          </span>
+          {selected ? (
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+              <CheckIcon className="h-5 w-5" aria-hidden="true" />
+            </span>
+          ) : null}
+        </li>
+      )}
+    </Listbox.Option>
+  );
+};

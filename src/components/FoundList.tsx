@@ -4,7 +4,7 @@ import StreetIcon from "@/components/StreetIcon";
 import { METRO } from "@/lib/constants";
 import SortMenu from "@/components/SortMenu";
 import { useMemo, useState } from "react";
-import { SortOption, DataFeature } from "@/lib/types";
+import { SortOption, DataFeature, SortOptionType } from "@/lib/types";
 import { TimerIcon } from "./TimerIcon";
 import { sortBy } from "lodash";
 
@@ -23,11 +23,7 @@ const FoundList = ({
   hoveredId: number | null;
   hideLabels?: boolean;
 }) => {
-  const sortOptions: {
-    name: string;
-    id: SortOption;
-    shortName: React.ReactNode;
-  }[] = useMemo(() => {
+  const sortOptions: SortOption[] = useMemo(() => {
     return [
       {
         name: "Chronologique",
@@ -40,7 +36,7 @@ const FoundList = ({
     ];
   }, []);
 
-  const [sort, setSort] = useState<SortOption>("order");
+  const [sort, setSort] = useState<SortOptionType>("order");
 
   const sorted = useMemo(() => {
     switch (sort) {

@@ -1,6 +1,6 @@
 import { FeatureCollection, MultiLineString, LineString, Point } from "geojson";
 
-export type SortOption = "order" | "name" | "length" | "line";
+export type SortOptionType = "order" | "name" | "length" | "line";
 
 export type DataFeatureCollection = FeatureCollection<
   LineString | MultiLineString | Point,
@@ -22,3 +22,9 @@ export type DataFeatureCollection = FeatureCollection<
 };
 
 export type DataFeature = DataFeatureCollection["features"][number];
+
+export interface SortOption {
+  name: string;
+  id: SortOptionType;
+  shortName: React.ReactNode;
+}
