@@ -8,128 +8,36 @@ import {
   useEffect,
   useRef,
 } from "react";
-import data from "../../public/data/features.json";
+import data from "@/data/features.json";
 import Fuse from "fuse.js";
 import { useLocalStorageValue } from "@react-hookz/web";
-import { FeatureCollection, LineString, MultiLineString, Point } from "geojson";
 import mapboxgl from "mapbox-gl";
-import { range, sumBy } from "lodash";
-import { Transition } from "@headlessui/react";
+import { sumBy } from "lodash";
 import classNames from "classnames";
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 
 import "mapbox-gl/dist/mapbox-gl.css";
 import "react-circular-progressbar/dist/styles.css";
-import StreetIcon from "@/components/StreetIcon";
 import MenuComponent from "@/components/Menu";
 import IntroModal from "@/components/IntroModal";
 import removeAccents from "@/lib/removeAccents";
+import FoundSummary from "@/components/FoundSummary";
+import FoundList from "@/components/FoundList";
+import { DataFeatureCollection, DataFeature } from "@/lib/types";
 
-const fc = data as FeatureCollection<
-  LineString | MultiLineString | Point,
-  {
-    type: string;
-    name: string;
-    id?: number | null;
-    long_name?: string;
-    short_name?: string;
-    line?: string;
-  }
-> & {
-  properties: {
-    totalLength: number;
-    totalStations: number;
-    stationsPerLine: { [key: string]: number };
-  };
-};
-
-const METRO_COLORS: { [key: string]: string } = {
-  "METRO 1": "#ffce00",
-  "METRO 2": "#0064b0",
-  "METRO 3": "#9f9825",
-  "METRO 3bis": "#98d4e2",
-  "METRO 4": "#c04191",
-  "METRO 5": "#f28e42",
-  "METRO 6": "#83c491",
-  "METRO 7": "#f3a4ba",
-  "METRO 7bis": "#83c491",
-  "METRO 8": "#ceadd2",
-  "METRO 9": "#d5c900",
-  "METRO 10": "#e3b32a",
-  "METRO 11": "#8d5e2a",
-  "METRO 12": "#00814f",
-  "METRO 13": "#98d4e2",
-  "METRO 14": "#662483",
-};
-
-const METRO_TEXT_COLORS: { [key: string]: string } = {
-  "METRO 1": "#222",
-  "METRO 2": "#fff",
-  "METRO 3": "#fff",
-  "METRO 3bis": "#222",
-  "METRO 4": "#fff",
-  "METRO 5": "#222",
-  "METRO 6": "#222",
-  "METRO 7": "#222",
-  "METRO 7bis": "#222",
-  "METRO 8": "#222",
-  "METRO 9": "#222",
-  "METRO 10": "#222",
-  "METRO 11": "#fff",
-  "METRO 12": "#fff",
-  "METRO 13": "#222",
-  "METRO 14": "#fff",
-};
-
-const METRO_LINES = [
-  "METRO 1",
-  "METRO 2",
-  "METRO 3",
-  "METRO 3bis",
-  "METRO 4",
-  "METRO 5",
-  "METRO 6",
-  "METRO 7",
-  "METRO 7bis",
-  "METRO 8",
-  "METRO 9",
-  "METRO 10",
-  "METRO 11",
-  "METRO 12",
-  "METRO 13",
-  "METRO 14",
-];
-
-const LINE_NAMES: { [key: string]: string } = {
-  "METRO 1": "1",
-  "METRO 2": "2",
-  "METRO 3": "3",
-  "METRO 3bis": "3b",
-  "METRO 4": "4",
-  "METRO 5": "5",
-  "METRO 6": "6",
-  "METRO 7": "7",
-  "METRO 7bis": "7b",
-  "METRO 8": "8",
-  "METRO 9": "9",
-  "METRO 10": "10",
-  "METRO 11": "11",
-  "METRO 12": "12",
-  "METRO 13": "13",
-  "METRO 14": "14",
-};
+const fc = data as DataFeatureCollection;
 
 export default function Home() {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
   const [search, setSearch] = useState<string>("");
   const [hideLabels, setHideLabels] = useState<boolean>(false);
   const [wrong, setWrong] = useState<boolean>(false);
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const idMap = useMemo(() => {
-    const map = new Map();
+    const map = new Map<number, DataFeature>();
     fc.features.forEach((feature) => {
-      map.set(feature.id, feature);
+      map.set(feature.id! as number, feature);
     });
     return map;
   }, []);
@@ -151,8 +59,6 @@ export default function Home() {
   const found: number[] = useMemo(() => {
     return localFound || [];
   }, [localFound]);
-
-  const [hoveredId, setHoveredId] = useState<number | null>(null);
 
   useEffect(() => {
     if (map && hideLabels) {
@@ -275,12 +181,13 @@ export default function Home() {
 
     const mapboxMap = new mapboxgl.Map({
       container: "map",
-      style: "mapbox://styles/benjamintd/cln0odb5h02ys01quh46uf8he",
+      style: "mapbox://styles/benjamintd/cln2v5u5m01cn01qn02po0po5",
       bounds: [
         [2.21, 48.815573],
         [2.47, 48.91],
       ],
       minZoom: 11,
+      fadeDuration: 50,
     });
 
     mapboxMap.on("load", () => {
@@ -522,6 +429,54 @@ export default function Home() {
         },
       });
 
+      mapboxMap.addLayer({
+        id: "hover-label-line",
+        type: "symbol",
+        paint: {
+          "text-halo-color": "rgb(255, 255, 255)",
+          "text-halo-width": 2,
+          "text-halo-blur": 1,
+          "text-color": "rgb(29, 40, 53)",
+        },
+        layout: {
+          "text-field": [
+            "coalesce",
+            ["get", "long_name"],
+            ["get", "short_name"],
+            "",
+          ],
+          "text-font": ["Parisine Bold", "Arial Unicode MS Regular"],
+          "text-anchor": "center",
+          "text-offset": [0, -0.6],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 11, 14, 22, 16],
+          "symbol-placement": "point",
+          "text-padding": 30,
+        },
+        source: "hovered",
+        filter: ["==", "$type", "LineString"],
+      });
+
+      mapboxMap.addLayer({
+        id: "hover-label-point",
+        type: "symbol",
+        paint: {
+          "text-halo-color": "rgb(255, 255, 255)",
+          "text-halo-width": 2,
+          "text-halo-blur": 1,
+          "text-color": "rgb(29, 40, 53)",
+        },
+        layout: {
+          "text-field": ["to-string", ["get", "name"]],
+          "text-font": ["Parisine Bold", "Arial Unicode MS Regular"],
+          "text-anchor": "bottom",
+          "text-offset": [0, -0.6],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 11, 14, 22, 16],
+          "symbol-placement": "point",
+        },
+        source: "hovered",
+        filter: ["==", "$type", "Point"],
+      });
+
       mapboxMap.once("data", () => {
         setMap((map) => (map === null ? mapboxMap : map));
       });
@@ -554,6 +509,11 @@ export default function Home() {
     if (!map) return;
 
     (map.getSource("hovered") as mapboxgl.GeoJSONSource).setData({
+      type: "FeatureCollection",
+      features: hoveredId ? [idMap.get(hoveredId)!] : [],
+    });
+
+    console.log({
       type: "FeatureCollection",
       features: hoveredId ? [idMap.get(hoveredId)!] : [],
     });
@@ -597,128 +557,21 @@ export default function Home() {
         </div>
       </div>
       <div className="h-full p-6 overflow-y-auto xl:w-[32rem] lg:w-96 hidden shadow-lg lg:block bg-blue-50">
-        <p className="text-xl">
-          <span className="text-2xl   font-bold">
-            {(foundStreetsPercentage * 100).toFixed(1)}
-          </span>{" "}
-          %
-        </p>
-        <p className="text-sm mb-2">kilomètres de rues trouvés</p>
-        <div className="w-full grid grid-cols-[20] grid-rows-1 grid-flow-col gap-1 mb-4">
-          {range(0, 20).map((i) => (
-            <div
-              key={i}
-              className={classNames("h-6 w-full col-span-1 shadow-sm", {
-                "bg-blue-600": i < foundStreetsPercentage * 20,
-                "bg-white": i >= foundStreetsPercentage * 20,
-              })}
-            ></div>
-          ))}
-        </div>
-        <p className="text-xl">
-          <span className="text-2xl font-bold">
-            {(foundStationsPercentage * 100).toFixed(1)}
-          </span>{" "}
-          %
-        </p>
-        <p className="text-sm mb-2">des stations de métro trouvées</p>
-        <div className="grid grid-cols-[8] grid-rows-2 grid-flow-col gap-1 mb-4">
-          {METRO_LINES.map((line) => {
-            return (
-              <div
-                key={line}
-                className="relative lg:h-8 xl:h-10 aspect-square flex items-center justify-center"
-              >
-                <div className="absolute w-full h-full z-10">
-                  <CircularProgressbar
-                    background
-                    backgroundPadding={2}
-                    styles={buildStyles({
-                      backgroundColor: METRO_COLORS[line],
-                      pathColor: METRO_TEXT_COLORS[line],
-                      trailColor: "transparent",
-                    })}
-                    value={
-                      (100 * (foundStationsPerLine[line] || 0)) /
-                      fc.properties.stationsPerLine[line]
-                    }
-                  />
-                </div>
-                <span
-                  className="block text-lg font-bold z-20"
-                  style={{ color: METRO_TEXT_COLORS[line] }}
-                >
-                  {LINE_NAMES[line]}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+        <FoundSummary
+          foundStreetsPercentage={foundStreetsPercentage}
+          foundStationsPercentage={foundStationsPercentage}
+          foundStationsPerLine={foundStationsPerLine}
+          stationsPerLine={fc.properties.stationsPerLine}
+        />
         <hr className="w-full border-b border-blue-100 my-4" />
-        {(found || []).length > 0 && (
-          <>
-            <p className="text-sm uppercase text-blue-900">
-              {found.length} éléments
-            </p>
-            <p className="text-xs uppercase text-blue-900 mb-4">
-              {(foundStreetsPercentage * fc.properties.totalLength).toFixed(1)}{" "}
-              km de rues
-            </p>
-          </>
-        )}
-        <ol className={classNames({ "transition-all blur-md": hideLabels })}>
-          {(found || []).map((id) => {
-            const feature = idMap.get(id);
-            if (!feature) return null;
-            return (
-              <Transition
-                appear={true}
-                as="li"
-                key={id}
-                show={true}
-                enter="transition-all duration-250"
-                enterFrom="h-0 opacity-0"
-                enterTo="h-8 opacity-100"
-                leave="transition-opacity duration-250"
-                leaveFrom="h-8 opacity-100"
-                leaveTo="h-0 opacity-0"
-              >
-                <div
-                  onMouseOver={() => setHoveredId(id)}
-                  onMouseOut={() => setHoveredId(null)}
-                  className={classNames(
-                    "w-full rounded text-sm flex items-center px-2 py-1",
-                    {
-                      "bg-yellow-400 shadow-sm": feature.id === hoveredId,
-                    }
-                  )}
-                >
-                  {feature.properties.line ? (
-                    <span
-                      className="w-5 h-5 rounded-full font-bold text-xs flex items-center justify-center mr-2"
-                      style={{
-                        backgroundColor: METRO_COLORS[feature.properties.line],
-                        color: METRO_TEXT_COLORS[feature.properties.line],
-                      }}
-                    >
-                      {LINE_NAMES[feature.properties.line]}
-                    </span>
-                  ) : (
-                    <StreetIcon className="w-5 h-5 mr-2" />
-                  )}
-                  <span className="max-w-md truncate">
-                    {feature.properties.long_name || feature.properties.name}
-                  </span>
-                  {feature.properties.length > 0 && (
-                    <span className="font-sans font-light opacity-80 ml-auto">
-                      {feature.properties.length.toFixed(1)} km
-                    </span>
-                  )}
-                </div>
-              </Transition>
-            );
-          })}
-        </ol>
+        <FoundList
+          foundStreetsKm={foundStreetsPercentage * fc.properties.totalLength}
+          found={found}
+          idMap={idMap}
+          setHoveredId={setHoveredId}
+          hoveredId={hoveredId}
+          hideLabels={hideLabels}
+        />
       </div>
       <IntroModal
         inputRef={inputRef}

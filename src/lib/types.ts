@@ -1,0 +1,24 @@
+import { FeatureCollection, MultiLineString, LineString, Point } from "geojson";
+
+export type SortOption = "order" | "name" | "length" | "line";
+
+export type DataFeatureCollection = FeatureCollection<
+  LineString | MultiLineString | Point,
+  {
+    type: string;
+    name: string;
+    id?: number | null;
+    long_name?: string;
+    short_name?: string;
+    line?: string;
+    length?: number;
+  }
+> & {
+  properties: {
+    totalLength: number;
+    totalStations: number;
+    stationsPerLine: { [key: string]: number };
+  };
+};
+
+export type DataFeature = DataFeatureCollection["features"][number];
