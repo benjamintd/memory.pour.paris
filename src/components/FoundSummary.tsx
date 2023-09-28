@@ -30,11 +30,14 @@ const FoundSummary = ({
         {range(0, 20).map((i) => (
           <div
             key={i}
-            className={classNames("h-4 @md:h-6 w-full col-span-1 shadow-sm", {
-              "bg-blue-600": i < foundStreetsPercentage * 20,
-              "bg-white border-px border-blue-300":
-                i >= foundStreetsPercentage * 20,
-            })}
+            className={classNames(
+              "h-4 @md:h-6 border-[1px] w-full col-span-1 shadow-sm",
+              {
+                "bg-blue-600 border-transparent":
+                  i < foundStreetsPercentage * 20,
+                "bg-white border-blue-200": i >= foundStreetsPercentage * 20,
+              }
+            )}
           ></div>
         ))}
       </div>

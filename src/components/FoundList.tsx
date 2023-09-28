@@ -26,7 +26,7 @@ const FoundList = ({
   const sortOptions: SortOption[] = useMemo(() => {
     return [
       {
-        name: "Chronologique",
+        name: "Ordre d'ajout",
         id: "order",
         shortName: <TimerIcon className="h-4 w-4" />,
       },
