@@ -147,7 +147,6 @@ export default function Home() {
       const matches: number[] = [];
       for (let i = 0; i < results.length; i++) {
         const result = results[i];
-        console.log(result);
         if (
           result.matches &&
           result.matches.length &&
@@ -509,11 +508,6 @@ export default function Home() {
     if (!map) return;
 
     (map.getSource("hovered") as mapboxgl.GeoJSONSource).setData({
-      type: "FeatureCollection",
-      features: hoveredId ? [idMap.get(hoveredId)!] : [],
-    });
-
-    console.log({
       type: "FeatureCollection",
       features: hoveredId ? [idMap.get(hoveredId)!] : [],
     });
