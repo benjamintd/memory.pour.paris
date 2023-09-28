@@ -2,13 +2,26 @@ import * as path from "path";
 import { Feature, FeatureCollection, LineString, Point } from "geojson";
 import turf, { lineString } from "@turf/turf";
 import { groupBy, mapValues } from "lodash";
+import { promises as fs } from "fs";
+
+const Bun = {
+  file(path: string) {
+    return {
+      async json() {
+        return JSON.parse(await fs.readFile(path, "utf8"));
+      },
+    };
+  },
+
+  async write(path: string, content: string) {
+    await fs.writeFile(path, content, "utf8");
+  },
+};
 
 const main = async () => {
   // --- STREETS ---
 
-  const streets = Bun.file(
-    path.join(__dirname, "../public/data/voies.geojson")
-  );
+  const streets = Bun.file(path.join(__dirname, "../data/voies.geojson"));
   const collection = (await streets.json()) as FeatureCollection<
     LineString,
     {
@@ -54,9 +67,7 @@ const main = async () => {
     );
 
   // --- STATIONS ---
-  const stations = Bun.file(
-    path.join(__dirname, "../public/data/stations.geojson")
-  );
+  const stations = Bun.file(path.join(__dirname, "../data/stations.geojson"));
 
   const stationsCollection = (await stations.json()) as FeatureCollection<
     Point,
@@ -80,7 +91,7 @@ const main = async () => {
     .filter((f) => f.properties.line.startsWith("METRO"));
 
   Bun.write(
-    path.join(__dirname, "../public/data/features.json"),
+    path.join(__dirname, "../data/features.json"),
     JSON.stringify({
       type: "FeatureCollection",
       features: [...featuresStreets, ...featuresStations],
