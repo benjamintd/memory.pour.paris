@@ -527,27 +527,36 @@ export default function Home() {
     <main className="flex flex-row items-center justify-between h-screen">
       <div className="relative flex justify-center h-full grow">
         <div className="absolute top-0 left-0 w-full h-full" id="map" />
-        <div className="absolute w-96 max-w-screen h-12 top-32 flex gap-4">
-          <input
-            className={classNames(
-              { "animate animate-shake": wrong },
-              "z-40 grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
-            )}
-            ref={inputRef}
-            placeholder="Rue ou station de métro"
-            value={search}
-            // @ts-ignore
-            onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
-            id="input"
-            type="text"
-            autoFocus
-            onKeyDown={onKeyDown}
-          ></input>
-          <MenuComponent
-            onReset={onReset}
-            hideLabels={hideLabels}
-            setHideLabels={setHideLabels}
+        <div className="absolute w-96 max-w-screen mx-2 h-12 top-4 lg:top-32">
+          <FoundSummary
+            className="mb-4 lg:hidden bg-white rounded-lg shadow-md p-4"
+            foundStreetsPercentage={foundStreetsPercentage}
+            foundStationsPercentage={foundStationsPercentage}
+            foundStationsPerLine={foundStationsPerLine}
+            stationsPerLine={fc.properties.stationsPerLine}
           />
+          <div className="flex gap-2 lg:gap-4">
+            <input
+              className={classNames(
+                { "animate animate-shake": wrong },
+                "z-40 grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
+              )}
+              ref={inputRef}
+              placeholder="Rue ou station de métro"
+              value={search}
+              // @ts-ignore
+              onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
+              id="input"
+              type="text"
+              autoFocus
+              onKeyDown={onKeyDown}
+            ></input>
+            <MenuComponent
+              onReset={onReset}
+              hideLabels={hideLabels}
+              setHideLabels={setHideLabels}
+            />
+          </div>
         </div>
       </div>
       <div className="h-full p-6 overflow-y-auto xl:w-[32rem] lg:w-96 hidden shadow-lg lg:block bg-blue-50">
