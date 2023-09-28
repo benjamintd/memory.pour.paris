@@ -15,6 +15,7 @@ const FoundList = ({
   hoveredId,
   hideLabels,
   foundStreetsKm,
+  zoomToFeature,
 }: {
   found: number[];
   foundStreetsKm: number;
@@ -22,6 +23,7 @@ const FoundList = ({
   setHoveredId: (id: number | null) => void;
   hoveredId: number | null;
   hideLabels?: boolean;
+  zoomToFeature: (id: number) => void;
 }) => {
   const sortOptions: SortOption[] = useMemo(() => {
     return [
@@ -119,7 +121,8 @@ const FoundList = ({
               leaveFrom="h-8 opacity-100"
               leaveTo="h-0 opacity-0"
             >
-              <div
+              <button
+                onClick={() => zoomToFeature(id)}
                 onMouseOver={() => setHoveredId(id)}
                 onMouseOut={() => setHoveredId(null)}
                 className={classNames(
@@ -150,7 +153,7 @@ const FoundList = ({
                     {feature.properties.length.toFixed(1)} km
                   </span>
                 )}
-              </div>
+              </button>
             </Transition>
           );
         })}

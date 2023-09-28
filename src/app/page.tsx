@@ -14,7 +14,7 @@ import { useLocalStorageValue } from "@react-hookz/web";
 import mapboxgl from "mapbox-gl";
 import { sumBy } from "lodash";
 import classNames from "classnames";
-
+import { coordEach } from "@turf/meta";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "react-circular-progressbar/dist/styles.css";
 import MenuComponent from "@/components/Menu";
@@ -523,6 +523,29 @@ export default function Home() {
     }
   }, [found, map]);
 
+  const zoomToFeature = useCallback(
+    (id: number) => {
+      if (!map) return;
+
+      const feature = idMap.get(id);
+      if (!feature) return;
+
+      if (feature.geometry.type === "Point") {
+        map.flyTo({
+          center: feature.geometry.coordinates as [number, number],
+          zoom: 14,
+        });
+      } else {
+        const bounds = new mapboxgl.LngLatBounds();
+        coordEach(feature, (coord) => {
+          bounds.extend(coord as [number, number]);
+        });
+        map.fitBounds(bounds, { padding: 100 });
+      }
+    },
+    [map, idMap]
+  );
+
   return (
     <main className="flex flex-row items-center justify-between h-screen">
       <div className="relative flex justify-center h-full grow">
@@ -574,6 +597,7 @@ export default function Home() {
           setHoveredId={setHoveredId}
           hoveredId={hoveredId}
           hideLabels={hideLabels}
+          zoomToFeature={zoomToFeature}
         />
       </div>
       <IntroModal

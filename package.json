@@ -12,7 +12,7 @@
     "@headlessui/react": "1.6.2",
     "@react-hookz/web": "^23.1.0",
     "@tailwindcss/container-queries": "^0.1.1",
-    "@turf/turf": "^5.0.0",
+    "@turf/turf": "^5.1.6",
     "@types/geojson": "^7946.0.11",
     "@types/js-levenshtein": "^1.1.1",
     "@types/lodash": "^4.14.198",
