@@ -5,7 +5,7 @@ import { METRO } from "@/lib/constants";
 import SortMenu from "@/components/SortMenu";
 import { useMemo, useState } from "react";
 import { SortOption, DataFeature, SortOptionType } from "@/lib/types";
-import { TimerIcon } from "./TimerIcon";
+import { DateAddedIcon } from "./DateAddedIcon";
 import { sortBy } from "lodash";
 
 const FoundList = ({
@@ -30,7 +30,7 @@ const FoundList = ({
       {
         name: "Ordre d'ajout",
         id: "order",
-        shortName: <TimerIcon className="h-4 w-4" />,
+        shortName: <DateAddedIcon className="h-4 w-4" />,
       },
       { name: "Nom", id: "name", shortName: "A-Z" },
       { name: "Longueur", id: "length", shortName: "km" },

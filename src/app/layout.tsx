@@ -19,9 +19,17 @@ const font = localFont({
   variable: "--font-sans",
 });
 export const metadata: Metadata = {
-  title: "Les rues de Paris",
+  title: "Paris de tête",
   description:
     "Quel pourcentage des rues et stations de métro de Paris connaissez-vous de tête ?",
+  openGraph: {
+    title: "Paris de tête",
+    description:
+      "Quel pourcentage des rues et stations de métro de Paris connaissez-vous de tête ?",
+    type: "website",
+    locale: "fr_FR",
+    url: "https://memory.pour.paris",
+  },
 };
 
 export default function RootLayout({
