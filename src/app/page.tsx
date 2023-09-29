@@ -142,7 +142,9 @@ export default function Home() {
       if (!search) return;
 
       e.preventDefault();
-      const results = fuse.search(removeAccents(search));
+
+      const sanitizedSearch = removeAccents(search);
+      const results = fuse.search(sanitizedSearch);
 
       const matches: number[] = [];
       for (let i = 0; i < results.length; i++) {
@@ -152,9 +154,10 @@ export default function Home() {
           result.matches.length &&
           result.matches.some(
             (match) =>
-              match.indices[0][0] < 3 &&
+              match.indices[0][0] < 2 &&
               match.value!.length - match.indices[match.indices.length - 1][1] <
-                3
+                2 &&
+              Math.abs(match.value!.length - sanitizedSearch.length) < 4
           ) &&
           (found || []).indexOf(+result.item.id!) === -1
         ) {
