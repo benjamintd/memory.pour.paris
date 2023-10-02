@@ -13,7 +13,6 @@ import Fuse from "fuse.js";
 import { useLocalStorageValue } from "@react-hookz/web";
 import mapboxgl from "mapbox-gl";
 import { sumBy } from "lodash";
-import classNames from "classnames";
 import { coordEach } from "@turf/meta";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "react-circular-progressbar/dist/styles.css";
@@ -23,14 +22,13 @@ import removeAccents from "@/lib/removeAccents";
 import FoundSummary from "@/components/FoundSummary";
 import FoundList from "@/components/FoundList";
 import { DataFeatureCollection, DataFeature } from "@/lib/types";
+import Input from "@/components/Input";
 
 const fc = data as DataFeatureCollection;
 
 export default function Home() {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
-  const [search, setSearch] = useState<string>("");
   const [hideLabels, setHideLabels] = useState<boolean>(false);
-  const [wrong, setWrong] = useState<boolean>(false);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -134,48 +132,6 @@ export default function Home() {
         },
       }),
     []
-  );
-
-  const onKeyDown: KeyboardEventHandler<HTMLInputElement> = useCallback(
-    (e) => {
-      if (e.key !== "Enter") return;
-      if (!search) return;
-
-      e.preventDefault();
-
-      const sanitizedSearch = removeAccents(search);
-      const results = fuse.search(sanitizedSearch);
-
-      const matches: number[] = [];
-      for (let i = 0; i < results.length; i++) {
-        const result = results[i];
-        if (
-          result.matches &&
-          result.matches.length &&
-          result.matches.some(
-            (match) =>
-              match.indices[0][0] < 2 &&
-              match.value!.length - match.indices[match.indices.length - 1][1] <
-                2 &&
-              Math.abs(match.value!.length - sanitizedSearch.length) < 4
-          ) &&
-          (found || []).indexOf(+result.item.id!) === -1
-        ) {
-          matches.push(+result.item.id!);
-        }
-      }
-
-      if (matches.length === 0) {
-        setWrong(true);
-        setTimeout(() => setWrong(false), 500);
-        return;
-      }
-
-      setFound([...matches, ...(found || [])]);
-      setIsNewPlayer(false);
-      setSearch("");
-    },
-    [search, setSearch, fuse, found, setFound, setWrong, setIsNewPlayer]
   );
 
   useEffect(() => {
@@ -562,21 +518,15 @@ export default function Home() {
             stationsPerLine={fc.properties.stationsPerLine}
           />
           <div className="flex gap-2 lg:gap-4">
-            <input
-              className={classNames(
-                { "animate animate-shake": wrong },
-                "z-40 grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
-              )}
-              ref={inputRef}
-              placeholder="Rue ou station de métro"
-              value={search}
-              // @ts-ignore
-              onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
-              id="input"
-              type="text"
-              autoFocus
-              onKeyDown={onKeyDown}
-            ></input>
+            <Input
+              fuse={fuse}
+              found={found}
+              setFound={setFound}
+              setIsNewPlayer={setIsNewPlayer}
+              inputRef={inputRef}
+              map={map}
+              idMap={idMap}
+            />
             <MenuComponent
               onReset={onReset}
               hideLabels={hideLabels}

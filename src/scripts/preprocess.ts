@@ -81,8 +81,8 @@ const main = async () => {
         ...feature,
         properties: {
           id,
-          name: feature.properties.nom_gares,
-          long_name: feature.properties.nom_zdc,
+          name: feature.properties.nom_zdc,
+          long_name: feature.properties.nom_gares,
           type: "metro",
           line: feature.properties.res_com,
         },

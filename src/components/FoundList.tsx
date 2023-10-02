@@ -1,12 +1,12 @@
 import { Transition } from "@headlessui/react";
 import classNames from "classnames";
 import StreetIcon from "@/components/StreetIcon";
-import { METRO } from "@/lib/constants";
+import { METRO, METRO_LINES } from "@/lib/constants";
 import SortMenu from "@/components/SortMenu";
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { SortOption, DataFeature, SortOptionType } from "@/lib/types";
 import { DateAddedIcon } from "./DateAddedIcon";
-import { sortBy } from "lodash";
+import { last, sortBy } from "lodash";
 
 const FoundList = ({
   found,
@@ -88,6 +88,26 @@ const FoundList = ({
     }
   }, [found, sort, idMap]);
 
+  const grouped = useMemo(() => {
+    const grouped = [];
+    let lastName = "";
+    for (let id of sorted) {
+      const feature = idMap.get(id);
+      if (!feature) continue;
+
+      if (
+        (feature.properties.long_name || feature.properties.name) === lastName
+      ) {
+        grouped[grouped.length - 1].push(feature);
+      } else {
+        grouped.push([feature]);
+        lastName = feature.properties.long_name || feature.properties.name;
+      }
+    }
+
+    return grouped;
+  }, [sorted, idMap]);
+
   return (
     <div>
       {sorted.length > 0 && (
@@ -105,61 +125,107 @@ const FoundList = ({
         </div>
       )}
       <ol className={classNames({ "transition-all blur-md": hideLabels })}>
-        {sorted.map((id) => {
-          const feature = idMap.get(id);
-          if (!feature) return null;
+        {grouped.map((features) => {
           return (
-            <Transition
-              appear={true}
-              as="li"
-              key={id}
-              show={true}
-              enter="transition-all duration-250"
-              enterFrom="h-0 opacity-0"
-              enterTo="h-8 opacity-100"
-              leave="transition-opacity duration-250"
-              leaveFrom="h-8 opacity-100"
-              leaveTo="h-0 opacity-0"
-            >
-              <button
-                onClick={() => zoomToFeature(id)}
-                onMouseOver={() => setHoveredId(id)}
-                onMouseOut={() => setHoveredId(null)}
-                className={classNames(
-                  "w-full rounded text-sm flex items-center px-2 py-1",
-                  {
-                    "bg-yellow-400 shadow-sm": feature.id === hoveredId,
-                  }
-                )}
-              >
-                {feature.properties.line ? (
-                  <span
-                    className="w-5 h-5 rounded-full font-bold text-xs flex items-center justify-center mr-2"
-                    style={{
-                      backgroundColor: METRO[feature.properties.line].color,
-                      color: METRO[feature.properties.line].textColor,
-                    }}
-                  >
-                    {METRO[feature.properties.line].name}
-                  </span>
-                ) : (
-                  <StreetIcon className="w-5 h-5 mr-2" />
-                )}
-                <span className="max-w-md truncate">
-                  {feature.properties.long_name || feature.properties.name}
-                </span>
-                {!!feature.properties.length && (
-                  <span className="font-sans font-light ml-auto">
-                    {feature.properties.length.toFixed(1)} km
-                  </span>
-                )}
-              </button>
-            </Transition>
+            <GroupedLine
+              key={features[0].id}
+              features={features}
+              zoomToFeature={zoomToFeature}
+              setHoveredId={setHoveredId}
+              hoveredId={hoveredId}
+            />
           );
         })}
       </ol>
     </div>
   );
 };
+
+const GroupedLine = memo(
+  ({
+    features,
+    zoomToFeature,
+    setHoveredId,
+    hoveredId,
+  }: {
+    features: DataFeature[];
+    zoomToFeature: (id: number) => void;
+    setHoveredId: (id: number | null) => void;
+    hoveredId: number | null;
+  }) => {
+    const length = useMemo(() => {
+      return features.reduce((acc, feature) => {
+        if (feature.properties.length) {
+          return acc + feature.properties.length;
+        } else {
+          return acc;
+        }
+      }, 0);
+    }, [features]);
+
+    const times = features.length;
+
+    return (
+      <Transition
+        appear={true}
+        as="li"
+        key={features[0].id}
+        show={true}
+        enter="transition-all duration-250"
+        enterFrom="h-0 opacity-0"
+        enterTo="h-8 opacity-100"
+        leave="transition-opacity duration-250"
+        leaveFrom="h-8 opacity-100"
+        leaveTo="h-0 opacity-0"
+      >
+        <button
+          onClick={() => zoomToFeature(features[0].properties.id!)}
+          onMouseOver={() => setHoveredId(+features[0].id!)}
+          onMouseOut={() => setHoveredId(null)}
+          className={classNames(
+            "w-full rounded text-sm flex items-center px-2 py-1",
+            {
+              "bg-yellow-400 shadow-sm": features.some(
+                (f) => f.id === hoveredId
+              ),
+            }
+          )}
+        >
+          {sortBy(features, (f) => METRO[f.properties.line || ""]?.order).map(
+            (feature) =>
+              feature.properties.line ? (
+                <span
+                  key={feature.id!}
+                  className="w-5 h-5 rounded-full font-bold text-xs flex items-center justify-center -mr-1"
+                  style={{
+                    backgroundColor: METRO[feature.properties.line].color,
+                    color: METRO[feature.properties.line].textColor,
+                  }}
+                >
+                  {METRO[feature.properties.line].name}
+                </span>
+              ) : (
+                <StreetIcon key={feature.id!} className="w-5 h-5 -mr-1" />
+              )
+          )}
+
+          <span className="ml-3 max-w-md truncate">
+            {features[0].properties.long_name || features[0].properties.name}
+          </span>
+          {!!length ? (
+            <span className="font-sans font-light ml-auto text-gray-500">
+              {length.toFixed(1)} km
+            </span>
+          ) : times > 1 ? (
+            <span className="font-sans font-light ml-auto text-gray-500">
+              ｘ{times}
+            </span>
+          ) : null}
+        </button>
+      </Transition>
+    );
+  }
+);
+GroupedLine.displayName = "GroupedLine";
 
 export default FoundList;
