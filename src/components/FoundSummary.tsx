@@ -1,6 +1,9 @@
 import { METRO, METRO_LINES } from "@/lib/constants";
+import { usePrevious } from "@react-hookz/web";
 import classNames from "classnames";
 import { range } from "lodash";
+import dynamic from "next/dynamic";
+import { useEffect } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 
 const FoundSummary = ({
@@ -16,6 +19,37 @@ const FoundSummary = ({
   foundStationsPerLine: Record<string, number>;
   stationsPerLine: Record<string, number>;
 }) => {
+  const previousFound = usePrevious(foundStationsPerLine);
+
+  useEffect(() => {
+    // confetti when new line is 100%
+    const newFoundLines = Object.keys(foundStationsPerLine).filter(
+      (line) =>
+        previousFound &&
+        foundStationsPerLine[line] > previousFound[line] &&
+        foundStationsPerLine[line] === stationsPerLine[line]
+    );
+
+    if (newFoundLines.length > 0) {
+      const makeConfetti = async () => {
+        const confetti = (await import("tsparticles-confetti")).confetti;
+        confetti({
+          shapes: ["image"],
+          scalar: 2,
+          shapeOptions: {
+            image: newFoundLines.map((line) => ({
+              src: `/images/${METRO[line].name}.png`,
+              width: 64,
+              height: 64,
+            })),
+          },
+        });
+      };
+
+      makeConfetti();
+    }
+  }, [previousFound, foundStationsPerLine, stationsPerLine]);
+
   return (
     <div className={classNames(className, "@container")}>
       <p className="mb-2">

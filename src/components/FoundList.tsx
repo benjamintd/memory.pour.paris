@@ -91,17 +91,21 @@ const FoundList = ({
   const grouped = useMemo(() => {
     const grouped = [];
     let lastName = "";
+    let lastType = "";
     for (let id of sorted) {
       const feature = idMap.get(id);
       if (!feature) continue;
 
       if (
-        (feature.properties.long_name || feature.properties.name) === lastName
+        (feature.properties.long_name || feature.properties.name) ===
+          lastName &&
+        feature.properties.type === lastType
       ) {
         grouped[grouped.length - 1].push(feature);
       } else {
         grouped.push([feature]);
         lastName = feature.properties.long_name || feature.properties.name;
+        lastType = feature.properties.type;
       }
     }
 
