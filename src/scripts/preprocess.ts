@@ -71,7 +71,7 @@ const main = async () => {
 
   const stationsCollection = (await stations.json()) as FeatureCollection<
     Point,
-    { id_gares: number; nom_gares: string; res_com: string }
+    { id_gares: number; nom_gares: string; res_com: string; nom_zdc: string }
   >;
 
   const featuresStations = stationsCollection.features
@@ -82,6 +82,7 @@ const main = async () => {
         properties: {
           id,
           name: feature.properties.nom_gares,
+          long_name: feature.properties.nom_zdc,
           type: "metro",
           line: feature.properties.res_com,
         },
