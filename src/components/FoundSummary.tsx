@@ -34,6 +34,13 @@ const FoundSummary = ({
       const makeConfetti = async () => {
         const confetti = (await import("tsparticles-confetti")).confetti;
         confetti({
+          spread: 120,
+          ticks: 200,
+          particleCount: 150,
+          origin: { y: 0.2 },
+          decay: 0.9,
+          gravity: 2,
+          startVelocity: 50,
           shapes: ["image"],
           scalar: 2,
           shapeOptions: {
