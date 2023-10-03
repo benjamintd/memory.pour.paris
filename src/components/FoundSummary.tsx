@@ -14,7 +14,7 @@ const FoundSummary = ({
   stationsPerLine,
 }: {
   className?: string;
-  foundStreetsPercentage: number;
+  foundStreetsPercentage?: number;
   foundStationsPercentage: number;
   foundStationsPerLine: Record<string, number>;
   stationsPerLine: Record<string, number>;
@@ -38,7 +38,7 @@ const FoundSummary = ({
           ticks: 200,
           particleCount: 150,
           origin: { y: 0.2 },
-          decay: 0.9,
+          decay: 0.85,
           gravity: 2,
           startVelocity: 50,
           shapes: ["image"],
@@ -59,29 +59,35 @@ const FoundSummary = ({
 
   return (
     <div className={classNames(className, "@container")}>
-      <p className="mb-2">
-        <span className="text-lg @md:text-2xl font-bold">
-          {(foundStreetsPercentage * 100).toFixed(1)}
-        </span>{" "}
-        <span className="text-lg @md:text-xl">%</span>{" "}
-        <br className="hidden @md:block" />{" "}
-        <span className="text-sm">kilomètres de rues trouvés</span>
-      </p>
-      <div className="w-full grid grid-cols-[20] grid-rows-1 grid-flow-col gap-1 mb-4">
-        {range(0, 20).map((i) => (
-          <div
-            key={i}
-            className={classNames(
-              "h-4 @md:h-6 border-[1px] w-full col-span-1 shadow-sm",
-              {
-                "bg-blue-600 border-transparent":
-                  i < foundStreetsPercentage * 20,
-                "bg-white border-blue-200": i >= foundStreetsPercentage * 20,
-              }
-            )}
-          ></div>
-        ))}
-      </div>
+      {foundStreetsPercentage !== undefined && (
+        <>
+          {" "}
+          <p className="mb-2">
+            <span className="text-lg @md:text-2xl font-bold">
+              {(foundStreetsPercentage * 100).toFixed(1)}
+            </span>{" "}
+            <span className="text-lg @md:text-xl">%</span>{" "}
+            <br className="hidden @md:block" />{" "}
+            <span className="text-sm">kilomètres de rues trouvés</span>
+          </p>
+          <div className="w-full grid grid-cols-[20] grid-rows-1 grid-flow-col gap-1 mb-4">
+            {range(0, 20).map((i) => (
+              <div
+                key={i}
+                className={classNames(
+                  "h-4 @md:h-6 border-[1px] w-full col-span-1 shadow-sm",
+                  {
+                    "bg-blue-600 border-transparent":
+                      i < foundStreetsPercentage * 20,
+                    "bg-white border-blue-200":
+                      i >= foundStreetsPercentage * 20,
+                  }
+                )}
+              ></div>
+            ))}
+          </div>
+        </>
+      )}
       <p className="mb-2">
         <span className="text-lg @md:text-2xl font-bold">
           {(foundStationsPercentage * 100).toFixed(1)}

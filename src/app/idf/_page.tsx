@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import data from "@/data/features.json";
+import data from "@/data/features-idf.json";
 import Fuse from "fuse.js";
 import { useLocalStorageValue } from "@react-hookz/web";
 import mapboxgl from "mapbox-gl";
@@ -14,11 +14,11 @@ import IntroModal from "@/components/IntroModal";
 import removeAccents from "@/lib/removeAccents";
 import FoundSummary from "@/components/FoundSummary";
 import FoundList from "@/components/FoundList";
-import { DataFeatureCollection, DataFeature } from "@/lib/types";
+import { IDFDataFeatureCollection, DataFeature } from "@/lib/types";
 import Input from "@/components/Input";
 import { METRO, METRO_LINES } from "@/lib/constants";
 
-const fc = data as DataFeatureCollection;
+const fc = data as IDFDataFeatureCollection;
 
 export default function Home() {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
@@ -68,14 +68,6 @@ export default function Home() {
       setIsNewPlayer(true);
     }
   }, [setFound, setIsNewPlayer]);
-
-  const foundStreetsPercentage = useMemo(() => {
-    return sumBy(
-      found,
-      (id) =>
-        (idMap.get(id)?.properties.length || 0) / fc.properties.totalLength
-    );
-  }, [found, idMap]);
 
   const foundStationsPercentage = useMemo(() => {
     return sumBy(
@@ -133,12 +125,12 @@ export default function Home() {
 
     const mapboxMap = new mapboxgl.Map({
       container: "map",
-      style: "mapbox://styles/benjamintd/cln2v5u5m01cn01qn02po0po5",
+      style: "mapbox://styles/benjamintd/clna5eqeb03go01qu5owb83oq",
       bounds: [
         [2.21, 48.815573],
         [2.47, 48.91],
       ],
-      minZoom: 11,
+      minZoom: 6,
       fadeDuration: 50,
     });
 
@@ -447,7 +439,6 @@ export default function Home() {
         <div className="absolute w-96 max-w-screen mx-2 h-12 top-4 lg:top-32">
           <FoundSummary
             className="mb-4 lg:hidden bg-white rounded-lg shadow-md p-4"
-            foundStreetsPercentage={foundStreetsPercentage}
             foundStationsPercentage={foundStationsPercentage}
             foundStationsPerLine={foundStationsPerLine}
             stationsPerLine={fc.properties.stationsPerLine}
@@ -472,14 +463,12 @@ export default function Home() {
       </div>
       <div className="h-full p-6 overflow-y-auto xl:w-[32rem] lg:w-96 hidden shadow-lg lg:block bg-blue-50">
         <FoundSummary
-          foundStreetsPercentage={foundStreetsPercentage}
           foundStationsPercentage={foundStationsPercentage}
           foundStationsPerLine={foundStationsPerLine}
           stationsPerLine={fc.properties.stationsPerLine}
         />
         <hr className="w-full border-b border-blue-100 my-4" />
         <FoundList
-          foundStreetsKm={foundStreetsPercentage * fc.properties.totalLength}
           found={found}
           idMap={idMap}
           setHoveredId={setHoveredId}

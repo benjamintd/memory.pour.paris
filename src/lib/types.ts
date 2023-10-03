@@ -21,6 +21,24 @@ export type DataFeatureCollection = FeatureCollection<
   };
 };
 
+export type IDFDataFeatureCollection = FeatureCollection<
+  LineString | MultiLineString | Point,
+  {
+    type: string;
+    name: string;
+    id?: number | null;
+    long_name?: string;
+    short_name?: string;
+    line?: string;
+    length?: number;
+  }
+> & {
+  properties: {
+    totalStations: number;
+    stationsPerLine: { [key: string]: number };
+  };
+};
+
 export type DataFeature = DataFeatureCollection["features"][number];
 
 export interface SortOption {

@@ -18,7 +18,7 @@ const FoundList = ({
   zoomToFeature,
 }: {
   found: number[];
-  foundStreetsKm: number;
+  foundStreetsKm?: number;
   idMap: Map<number, DataFeature>;
   setHoveredId: (id: number | null) => void;
   hoveredId: number | null;
@@ -39,6 +39,8 @@ const FoundList = ({
   }, []);
 
   const [sort, setSort] = useState<SortOptionType>("order");
+
+  // @todo an effect to add the stations whose names have already been found to the found list.
 
   const sorted = useMemo(() => {
     switch (sort) {
@@ -66,7 +68,7 @@ const FoundList = ({
             const feature = idMap.get(id);
             if (!feature) return null;
             if (!feature.properties.line) return Infinity;
-            return METRO[feature.properties.line].order || Infinity;
+            return METRO[feature.properties.line]?.order || Infinity;
           },
           // then by location, roughly
           (id) => {
@@ -120,9 +122,11 @@ const FoundList = ({
             <p className="text-sm uppercase text-blue-900">
               {sorted.length} éléments
             </p>
-            <p className="text-xs uppercase text-blue-900">
-              {foundStreetsKm.toFixed(1)} km de rues
-            </p>
+            {foundStreetsKm !== undefined && (
+              <p className="text-xs uppercase text-blue-900">
+                {foundStreetsKm.toFixed(1)} km de rues
+              </p>
+            )}
           </div>
 
           <SortMenu sortOptions={sortOptions} sort={sort} setSort={setSort} />
@@ -202,11 +206,11 @@ const GroupedLine = memo(
                   key={feature.id!}
                   className="w-5 h-5 rounded-full font-bold text-xs flex items-center justify-center -mr-1"
                   style={{
-                    backgroundColor: METRO[feature.properties.line].color,
-                    color: METRO[feature.properties.line].textColor,
+                    backgroundColor: METRO[feature.properties.line]?.color,
+                    color: METRO[feature.properties.line]?.textColor,
                   }}
                 >
-                  {METRO[feature.properties.line].name}
+                  {METRO[feature.properties.line]?.name}
                 </span>
               ) : (
                 <StreetIcon key={feature.id!} className="w-5 h-5 -mr-1" />

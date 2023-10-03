@@ -1,6 +1,6 @@
 import * as path from "path";
 import { Feature, FeatureCollection, LineString, Point } from "geojson";
-import turf, { lineString } from "@turf/turf";
+import turf from "@turf/turf";
 import { groupBy, mapValues } from "lodash";
 import { promises as fs } from "fs";
 

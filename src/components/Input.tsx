@@ -60,7 +60,7 @@ const Input = ({
         return;
       } else {
         setSuccess(true);
-        setTimeout(() => setSuccess(false), 500);
+        setTimeout(() => setSuccess(false), 250);
         if (map) {
           (map.getSource("hovered") as mapboxgl.GeoJSONSource).setData({
             type: "FeatureCollection",
@@ -98,9 +98,9 @@ const Input = ({
       className={classNames(
         {
           "animate animate-shake": wrong,
-          "!shadow-yellow-500 shadow-inner duration-500": success,
+          "!shadow-yellow-500 shadow-md": success,
         },
-        "transition-shadow z-40 grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
+        "transition-shadow duration-300 z-40 grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
       )}
       ref={inputRef}
       placeholder="Rue ou station de métro"
