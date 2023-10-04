@@ -1,23 +1,32 @@
+"use client";
+
 import { LINES, MODE_NAMES } from "@/lib/constants";
 import getMode from "@/lib/getMode";
 import { usePrevious } from "@react-hookz/web";
 import classNames from "classnames";
 import { range } from "lodash";
-import { Fragment, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MetroProgressBars from "./MetroProgressBars";
+import ProgressBars from "./ProgressBars";
+import { MaximizeIcon } from "./MaximizeIcon";
+import { MinimizeIcon } from "./MinimizeIcon";
+import Image from "next/image";
 
 const FoundSummary = ({
   className,
   foundStreetsPercentage,
   foundStationsPerLine,
   stationsPerLine,
+  minimizable = false,
 }: {
   className?: string;
   foundStreetsPercentage?: number;
   foundStationsPerLine: Record<string, number>;
   stationsPerLine: Record<string, number>;
+  minimizable?: boolean;
 }) => {
   const previousFound = usePrevious(foundStationsPerLine);
+  const [minimized, setMinimized] = useState<boolean>(false);
 
   useEffect(() => {
     // confetti when new line is 100%
@@ -88,10 +97,28 @@ const FoundSummary = ({
   }, [foundStationsPerLine, stationsPerLine]);
 
   return (
-    <div className={classNames(className, "@container")}>
-      {foundStreetsPercentage !== undefined && (
+    <div
+      className={classNames(className, "@container", {
+        relative: minimizable,
+        "grid grid-cols-2 gap-2": minimized,
+      })}
+    >
+      {minimizable && (
+        <div className="absolute top-0 right-0 p-2">
+          <button
+            onClick={() => setMinimized(!minimized)}
+            className="text-gray-500 rounded-full -m-1 flex items-center justify-center w-8 h-8"
+          >
+            {minimized ? (
+              <MaximizeIcon className="w-6 h-6" />
+            ) : (
+              <MinimizeIcon className="w-6 h-6" />
+            )}
+          </button>
+        </div>
+      )}
+      {foundStreetsPercentage !== undefined && !minimized && (
         <>
-          {" "}
           <p className="mb-2">
             <span className="text-lg @md:text-2xl font-bold">
               {(foundStreetsPercentage * 100).toFixed(1)}
@@ -123,6 +150,23 @@ const FoundSummary = ({
           return null;
         }
 
+        if (minimized) {
+          return (
+            <div key={mode} className="flex gap-2 items-center">
+              <Image
+                alt={mode}
+                src={`/images/${mode}.svg`}
+                width={24}
+                height={24}
+              />
+              <span className="text-lg @md:text-xl font-bold">
+                {((foundStationsPerMode[mode] || 0) * 100).toFixed(1)}
+              </span>{" "}
+              <span className="text-base @md:text-lg">%</span>{" "}
+            </div>
+          );
+        }
+
         return (
           <div key={mode} className="mb-2">
             <p className="mb-2">
@@ -134,8 +178,14 @@ const FoundSummary = ({
                 des stations de {MODE_NAMES[mode]} trouvées
               </span>
             </p>
-            {mode === "METRO" && (
+            {mode === "METRO" ? (
               <MetroProgressBars
+                foundStationsPerLine={foundStationsPerLine}
+                stationsPerLine={stationsPerLine}
+              />
+            ) : (
+              <ProgressBars
+                mode={mode}
                 foundStationsPerLine={foundStationsPerLine}
                 stationsPerLine={stationsPerLine}
               />

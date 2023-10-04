@@ -1,3 +1,5 @@
+"use client";
+
 import removeAccents from "@/lib/removeAccents";
 import classNames from "classnames";
 import { useState, KeyboardEventHandler, useCallback } from "react";

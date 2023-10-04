@@ -468,6 +468,7 @@ export default function Home() {
             className="mb-4 lg:hidden bg-white rounded-lg shadow-md p-4"
             foundStationsPerLine={foundStationsPerLine}
             stationsPerLine={fc.properties.stationsPerLine}
+            minimizable
           />
           <div className="flex gap-2 lg:gap-4">
             <Input
