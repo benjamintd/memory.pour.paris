@@ -1,10 +1,10 @@
-import { METRO, METRO_LINES } from "@/lib/constants";
+import { LINES, MODE_NAMES } from "@/lib/constants";
+import getMode from "@/lib/getMode";
 import { usePrevious } from "@react-hookz/web";
 import classNames from "classnames";
 import { range } from "lodash";
-import dynamic from "next/dynamic";
-import { useEffect } from "react";
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import { Fragment, useEffect, useMemo } from "react";
+import MetroProgressBars from "./MetroProgressBars";
 
 const FoundSummary = ({
   className,
@@ -45,7 +45,7 @@ const FoundSummary = ({
           scalar: 2,
           shapeOptions: {
             image: newFoundLines.map((line) => ({
-              src: `/images/${METRO[line].name}.png`,
+              src: `/images/${LINES[line].name}.png`,
               width: 64,
               height: 64,
             })),
@@ -56,6 +56,38 @@ const FoundSummary = ({
       makeConfetti();
     }
   }, [previousFound, foundStationsPerLine, stationsPerLine]);
+
+  const foundStationsPerMode = useMemo(() => {
+    let foundStationsPercentagePerMode: Record<string, number> = {};
+    for (let line of Object.keys(foundStationsPerLine)) {
+      const mode = getMode(line);
+
+      if (!foundStationsPercentagePerMode[mode]) {
+        foundStationsPercentagePerMode[mode] = 0;
+      }
+
+      foundStationsPercentagePerMode[mode] += foundStationsPerLine[line];
+    }
+
+    const stationsPerMode = Object.keys(stationsPerLine).reduce((acc, line) => {
+      const mode = getMode(line);
+
+      if (!acc[mode]) {
+        acc[mode] = 0;
+      }
+
+      acc[mode] += stationsPerLine[line];
+
+      return acc;
+    }, {} as Record<string, number>);
+
+    // normalize
+    for (let mode of Object.keys(foundStationsPercentagePerMode)) {
+      foundStationsPercentagePerMode[mode] /= stationsPerMode[mode];
+    }
+
+    return foundStationsPercentagePerMode;
+  }, [foundStationsPerLine, stationsPerLine]);
 
   return (
     <div className={classNames(className, "@container")}>
@@ -93,41 +125,33 @@ const FoundSummary = ({
           {(foundStationsPercentage * 100).toFixed(1)}
         </span>{" "}
         <span className="text-lg @md:text-xl">%</span>{" "}
-        <br className="hidden @md:block" />{" "}
         <span className="text-sm">des stations de métro trouvées</span>
       </p>
-      <div className="grid grid-cols-[repeat(8,minmax(0,1fr))] grid-rows-2 gap-1">
-        {METRO_LINES.map((line) => {
-          return (
-            <div
-              key={line}
-              className="relative h-8 @md:h-10 aspect-square flex items-center justify-center"
-            >
-              <div className="absolute w-full h-full z-10">
-                <CircularProgressbar
-                  background
-                  backgroundPadding={2}
-                  styles={buildStyles({
-                    backgroundColor: METRO[line].color,
-                    pathColor: METRO[line].textColor,
-                    trailColor: "transparent",
-                  })}
-                  value={
-                    (100 * (foundStationsPerLine[line] || 0)) /
-                    stationsPerLine[line]
-                  }
-                />
-              </div>
-              <span
-                className="block text-base @md:text-lg font-bold z-20"
-                style={{ color: METRO[line].textColor }}
-              >
-                {METRO[line].name}
+      {["METRO", "RER", "TRAM", "TRAIN"].map((mode) => {
+        if (!foundStationsPerMode[mode]) {
+          return null;
+        }
+
+        return (
+          <Fragment key={mode}>
+            <p className="mb-2">
+              <span className="text-lg @md:text-2xl font-bold">
+                {((foundStationsPerMode[mode] || 0) * 100).toFixed(1)}
+              </span>{" "}
+              <span className="text-lg @md:text-xl">%</span>{" "}
+              <span className="text-sm">
+                des stations de {MODE_NAMES[mode]} trouvées
               </span>
-            </div>
-          );
-        })}
-      </div>
+            </p>
+            {mode === "METRO" && (
+              <MetroProgressBars
+                foundStationsPerLine={foundStationsPerLine}
+                stationsPerLine={stationsPerLine}
+              />
+            )}
+          </Fragment>
+        );
+      })}
     </div>
   );
 };

@@ -10,7 +10,6 @@ export default function IntroModal({
   setOpen: (open: boolean) => void;
   inputRef: React.RefObject<HTMLInputElement>;
 }) {
-  // @ts-ignore
   inputRef.current?.focus();
   return (
     <Transition.Root show={!!open} as={Fragment}>

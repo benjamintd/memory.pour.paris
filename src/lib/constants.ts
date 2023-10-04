@@ -17,7 +17,7 @@ export const METRO_LINES = [
   "METRO 14",
 ];
 
-export const METRO: {
+export const LINES: {
   [name: string]: {
     name: string;
     color: string;
@@ -138,4 +138,90 @@ export const METRO: {
     textColor: "#fff",
     order: 14,
   },
+  // @todo from here it's dummy data
+  "RER A": {
+    name: "A",
+    color: "#d9006c",
+    backgroundColor: "#6c001f",
+    textColor: "#fff",
+    order: 1,
+  },
+  "RER B": {
+    name: "B",
+    color: "#0064b0",
+    backgroundColor: "#003258",
+    textColor: "#fff",
+    order: 2,
+  },
+  "RER C": {
+    name: "C",
+    color: "#9f9825",
+    backgroundColor: "#4f4c12",
+    textColor: "#fff",
+    order: 3,
+  },
+  "RER D": {
+    name: "D",
+    color: "green",
+    backgroundColor: "#602049",
+    textColor: "#fff",
+    order: 4,
+  },
+  "RER E": {
+    name: "E",
+    color: "pink",
+    backgroundColor: "#90440a",
+    textColor: "#222",
+    order: 5,
+  },
+  "TRAM 2": {
+    name: "T2",
+    color: "orange",
+    backgroundColor: "#356f41",
+    textColor: "#222",
+    order: 6,
+  },
+  "TRAM 3": {
+    name: "T3",
+    color: "blue",
+    backgroundColor: "#356f41",
+    textColor: "#222",
+    order: 6,
+  },
+  "TRAM 3a": {
+    name: "T3a",
+    color: "blue",
+    backgroundColor: "#356f41",
+    textColor: "#222",
+    order: 6,
+  },
+  "TRAIN N": {
+    name: "N",
+    color: "blue",
+    backgroundColor: "#356f41",
+    textColor: "#fff",
+    order: 6,
+  },
+  "TRAIN L": {
+    name: "L",
+    color: "magenta",
+    backgroundColor: "#356f41",
+    textColor: "#fff",
+    order: 6,
+  },
+  "TRAIN U": {
+    name: "U",
+    color: "purple",
+    backgroundColor: "#356f41",
+    textColor: "#fff",
+    order: 6,
+  },
+};
+
+export const MODE_NAMES: { [key: string]: string } = {
+  METRO: "métro",
+  RER: "RER",
+  TRAM: "tramway",
+  TRAIN: "train",
+  OTHER: "autres",
 };

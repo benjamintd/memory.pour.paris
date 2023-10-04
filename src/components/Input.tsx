@@ -103,9 +103,8 @@ const Input = ({
         "transition-shadow duration-300 z-40 grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
       )}
       ref={inputRef}
-      placeholder="Rue ou station de métro"
+      placeholder="Station de métro, tram, RER..."
       value={search}
-      // @ts-ignore
       onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
       id="input"
       type="text"
