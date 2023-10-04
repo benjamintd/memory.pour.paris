@@ -1,8 +1,12 @@
+"use client";
+
 import { Fragment, useState } from "react";
 import { Menu, Transition } from "@headlessui/react";
 import MenuIcon from "./MenuIcon";
 import classNames from "classnames";
 import AboutModal from "./AboutModal";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 export default function MenuComponent({
   onReset,
@@ -13,6 +17,7 @@ export default function MenuComponent({
   hideLabels: boolean;
   setHideLabels: (hide: boolean) => void;
 }) {
+  const pathname = usePathname();
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
@@ -60,6 +65,36 @@ export default function MenuComponent({
                 </button>
               )}
             </Menu.Item>
+            {pathname === "/" && (
+              <Menu.Item>
+                {({ active }) => (
+                  <Link
+                    className={classNames(
+                      active ? "bg-gray-100 text-gray-900" : "text-gray-700",
+                      "block px-4 py-2 text-sm text-left w-full"
+                    )}
+                    href="/rues"
+                  >
+                    Revenir à l&apos;ancien jeu
+                  </Link>
+                )}
+              </Menu.Item>
+            )}
+            {pathname != "/" && (
+              <Menu.Item>
+                {({ active }) => (
+                  <Link
+                    className={classNames(
+                      active ? "bg-gray-100 text-gray-900" : "text-gray-700",
+                      "block px-4 py-2 text-sm text-left w-full"
+                    )}
+                    href="/"
+                  >
+                    Voir le nouveau jeu
+                  </Link>
+                )}
+              </Menu.Item>
+            )}
             <Menu.Item>
               {({ active }) => (
                 <button

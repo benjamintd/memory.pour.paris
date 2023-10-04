@@ -60,7 +60,7 @@ export default function Home() {
       (localFound || []).length === 0
     ) {
       window.alert(
-        "La page a changé pour inclure l'ensemble des lignes ferrées d'Ile de France. Vos scores vont être importés."
+        "La page a changé pour inclure l'ensemble des lignes ferrées d'Ile de France. Vos stations existantes vont être importés.\n Vous pouvez trouver un lien vers l'ancien jeu dans le menu."
       );
       for (let i = 0; i < legacyLocalFound.length; i++) {
         const id = legacyLocalFound[i];
@@ -98,11 +98,16 @@ export default function Home() {
   }, [localFound]);
 
   const onReset = useCallback(() => {
-    if (confirm("Vous allez perdre votre progression. Êtes-vous sûr ?")) {
+    if (
+      confirm(
+        "Vous allez perdre l'ensemble de votre progression. Êtes-vous sûr ?"
+      )
+    ) {
       setFound([]);
+      legacySetFound([]);
       setIsNewPlayer(true);
     }
-  }, [setFound, setIsNewPlayer]);
+  }, [setFound, setIsNewPlayer, legacySetFound]);
 
   const foundStationsPerLine = useMemo(() => {
     const foundStationsPerLine: { [key: string]: number } = {};

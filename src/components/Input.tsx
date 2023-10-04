@@ -6,6 +6,8 @@ import { useState, KeyboardEventHandler, useCallback } from "react";
 import Fuse from "fuse.js";
 import { DataFeature } from "@/lib/types";
 import { Transition } from "@headlessui/react";
+import { center } from "@turf/turf";
+import { sortBy } from "lodash";
 
 const Input = ({
   fuse,
@@ -84,7 +86,10 @@ const Input = ({
           }, 1500);
         }
 
-        setFound([...matches, ...(found || [])]);
+        setFound([
+          ...sortBy(matches, (id) => idMap.get(id)!.properties!.type),
+          ...(found || []),
+        ]);
         setIsNewPlayer(false);
         setSearch("");
       }
