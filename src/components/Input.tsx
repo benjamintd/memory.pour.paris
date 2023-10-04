@@ -3,6 +3,7 @@ import classNames from "classnames";
 import { useState, KeyboardEventHandler, useCallback } from "react";
 import Fuse from "fuse.js";
 import { DataFeature } from "@/lib/types";
+import { Transition } from "@headlessui/react";
 
 const Input = ({
   fuse,
@@ -24,6 +25,7 @@ const Input = ({
   const [search, setSearch] = useState<string>("");
   const [wrong, setWrong] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
+  const [alreadyFound, setAlreadyFound] = useState<boolean>(false);
 
   const onKeyDown: KeyboardEventHandler<HTMLInputElement> = useCallback(
     (e) => {
@@ -34,7 +36,7 @@ const Input = ({
 
       const sanitizedSearch = removeAccents(search);
       const results = fuse.search(sanitizedSearch);
-
+      let someAlreadyFound = false;
       const matches: number[] = [];
       for (let i = 0; i < results.length; i++) {
         const result = results[i];
@@ -47,14 +49,19 @@ const Input = ({
               match.value!.length - match.indices[match.indices.length - 1][1] <
                 2 &&
               Math.abs(match.value!.length - sanitizedSearch.length) < 4
-          ) &&
-          (found || []).indexOf(+result.item.id!) === -1
+          )
         ) {
-          matches.push(+result.item.id!);
+          if ((found || []).indexOf(+result.item.id!) === -1) {
+            matches.push(+result.item.id!);
+          } else {
+            someAlreadyFound = true;
+            setAlreadyFound(true);
+            setTimeout(() => setAlreadyFound(false), 1200);
+          }
         }
       }
 
-      if (matches.length === 0) {
+      if (matches.length === 0 && !someAlreadyFound) {
         setWrong(true);
         setTimeout(() => setWrong(false), 500);
         return;
@@ -94,23 +101,40 @@ const Input = ({
   );
 
   return (
-    <input
-      className={classNames(
-        {
-          "animate animate-shake": wrong,
-          "!shadow-yellow-500 shadow-md": success,
-        },
-        "transition-shadow duration-300 z-40 grow px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
-      )}
-      ref={inputRef}
-      placeholder="Station de métro, tram, RER..."
-      value={search}
-      onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
-      id="input"
-      type="text"
-      autoFocus
-      onKeyDown={onKeyDown}
-    ></input>
+    <div className="relative grow">
+      <input
+        className={classNames(
+          {
+            "animate animate-shake": wrong,
+            "!shadow-yellow-500 shadow-md": success,
+          },
+          "relative transition-shadow duration-300 z-40 w-full px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
+        )}
+        ref={inputRef}
+        placeholder="Station de métro, tram, RER..."
+        value={search}
+        onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
+        id="input"
+        type="text"
+        autoFocus
+        onKeyDown={onKeyDown}
+      ></input>
+      <Transition
+        show={alreadyFound}
+        as="div"
+        className="absolute right-0 top-0 mt-1 z-50 h-auto flex items-center my-auto pointer-events-none"
+        enter="transition-opacity duration-300"
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
+        leave="transition-opacity duration-500"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-0"
+      >
+        <div className="bg-green-200 text-green-800 border-green-400 px-2 py-1 mr-2 my-1 rounded-full flex items-center justify-center text-sm font-bold">
+          Déjà trouvé !
+        </div>
+      </Transition>
+    </div>
   );
 };
 

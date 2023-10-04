@@ -6,7 +6,7 @@ import SortMenu from "@/components/SortMenu";
 import { memo, useMemo, useState } from "react";
 import { SortOption, DataFeature, SortOptionType } from "@/lib/types";
 import { DateAddedIcon } from "./DateAddedIcon";
-import { last, sortBy } from "lodash";
+import { sortBy } from "lodash";
 import Image from "next/image";
 
 const FoundList = ({
@@ -17,6 +17,7 @@ const FoundList = ({
   hideLabels,
   foundStreetsKm,
   zoomToFeature,
+  includeStreets = false,
 }: {
   found: number[];
   foundStreetsKm?: number;
@@ -25,6 +26,7 @@ const FoundList = ({
   hoveredId: number | null;
   hideLabels?: boolean;
   zoomToFeature: (id: number) => void;
+  includeStreets?: boolean;
 }) => {
   const sortOptions: SortOption[] = useMemo(() => {
     return [
@@ -34,10 +36,12 @@ const FoundList = ({
         shortName: <DateAddedIcon className="h-4 w-4" />,
       },
       { name: "Nom", id: "name", shortName: "A-Z" },
-      { name: "Longueur", id: "length", shortName: "km" },
+      ...(includeStreets
+        ? ([{ name: "Longueur", id: "length", shortName: "km" }] as const)
+        : []),
       { name: "Ligne", id: "line", shortName: "1-9" },
     ];
-  }, []);
+  }, [includeStreets]);
 
   const [sort, setSort] = useState<SortOptionType>("order");
 
@@ -199,19 +203,23 @@ const GroupedLine = memo(
           )}
         >
           {sortBy(features, (f) => LINES[f.properties.line || ""]?.order).map(
-            (feature) =>
-              feature.properties.line ? (
+            (feature) => {
+              if (feature.properties.line && !LINES[feature.properties.line]) {
+                console.log(feature.properties.line);
+              }
+              return feature.properties.line ? (
                 <Image
                   key={feature.id!}
                   alt={feature.properties.line}
-                  src={`/images/${LINES[feature.properties.line].name}.png`}
+                  src={`/images/${LINES[feature.properties.line]?.name}.png`}
                   width={64}
                   height={64}
                   className="w-5 h-5 -mr-0.5"
                 />
               ) : (
                 <StreetIcon key={feature.id!} className="w-5 h-5 -mr-0.5" />
-              )
+              );
+            }
           )}
 
           <span className="ml-2.5 max-w-md truncate">

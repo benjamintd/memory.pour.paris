@@ -17,14 +17,15 @@ import FoundList from "@/components/FoundList";
 import { DataFeatureCollection, DataFeature } from "@/lib/types";
 import Input from "@/components/Input";
 import { LINES, METRO_LINES } from "@/lib/constants";
+import useHideLabels from "@/hooks/useHideLabels";
 
 const fc = data as DataFeatureCollection;
 
 export default function Home() {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
-  const [hideLabels, setHideLabels] = useState<boolean>(false);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const { hideLabels, setHideLabels } = useHideLabels(map);
 
   const idMap = useMemo(() => {
     const map = new Map<number, DataFeature>();
@@ -52,16 +53,6 @@ export default function Home() {
     return localFound || [];
   }, [localFound]);
 
-  useEffect(() => {
-    if (map && hideLabels) {
-      map.setLayoutProperty("voies-labels", "visibility", "none");
-      map.setLayoutProperty("metro-labels", "visibility", "none");
-    } else if (map) {
-      map.setLayoutProperty("voies-labels", "visibility", "visible");
-      map.setLayoutProperty("metro-labels", "visibility", "visible");
-    }
-  }, [hideLabels, map]);
-
   const onReset = useCallback(() => {
     if (confirm("Vous allez perdre votre progression. Êtes-vous sûr ?")) {
       setFound([]);
@@ -74,15 +65,6 @@ export default function Home() {
       found,
       (id) =>
         (idMap.get(id)?.properties.length || 0) / fc.properties.totalLength
-    );
-  }, [found, idMap]);
-
-  const foundStationsPercentage = useMemo(() => {
-    return sumBy(
-      found,
-      (id) =>
-        (idMap.get(id)?.properties.type === "metro" ? 1 : 0) /
-        fc.properties.totalStations
     );
   }, [found, idMap]);
 
@@ -246,7 +228,7 @@ export default function Home() {
               ["get", "line"],
               ...METRO_LINES.flatMap((line) => [
                 [line],
-                LINES[line].backgroundColor,
+                LINES[line]?.backgroundColor,
               ]),
               "rgba(255, 255, 255, 0.8)",
             ],
@@ -448,7 +430,6 @@ export default function Home() {
           <FoundSummary
             className="mb-4 lg:hidden bg-white rounded-lg shadow-md p-4"
             foundStreetsPercentage={foundStreetsPercentage}
-            foundStationsPercentage={foundStationsPercentage}
             foundStationsPerLine={foundStationsPerLine}
             stationsPerLine={fc.properties.stationsPerLine}
           />
@@ -473,7 +454,6 @@ export default function Home() {
       <div className="h-full p-6 overflow-y-auto xl:w-[32rem] lg:w-96 hidden shadow-lg lg:block bg-blue-50">
         <FoundSummary
           foundStreetsPercentage={foundStreetsPercentage}
-          foundStationsPercentage={foundStationsPercentage}
           foundStationsPerLine={foundStationsPerLine}
           stationsPerLine={fc.properties.stationsPerLine}
         />
@@ -492,7 +472,9 @@ export default function Home() {
         inputRef={inputRef}
         open={isNewPlayer}
         setOpen={setIsNewPlayer}
-      />
+      >
+        Tapez le nom d&apos;une rue de Paris, puis appuyez sur Entrée.
+      </IntroModal>
     </main>
   );
 }

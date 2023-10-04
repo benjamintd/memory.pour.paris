@@ -16,15 +16,16 @@ import FoundSummary from "@/components/FoundSummary";
 import FoundList from "@/components/FoundList";
 import { IDFDataFeatureCollection, DataFeature } from "@/lib/types";
 import Input from "@/components/Input";
-import { LINES, METRO_LINES } from "@/lib/constants";
+import { LINES } from "@/lib/constants";
+import useHideLabels from "@/hooks/useHideLabels";
 
 const fc = data as IDFDataFeatureCollection;
 
 export default function Home() {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
-  const [hideLabels, setHideLabels] = useState<boolean>(false);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const { hideLabels, setHideLabels } = useHideLabels(map);
 
   const idMap = useMemo(() => {
     const map = new Map<number, DataFeature>();
@@ -59,7 +60,7 @@ export default function Home() {
       (localFound || []).length === 0
     ) {
       window.alert(
-        "La page a changé pour inclure les RER. Vos scores vont être importés."
+        "La page a changé pour inclure l'ensemble des lignes ferrées d'Ile de France. Vos scores vont être importés."
       );
       for (let i = 0; i < legacyLocalFound.length; i++) {
         const id = legacyLocalFound[i];
@@ -71,18 +72,15 @@ export default function Home() {
           if (
             f.properties.name === feature.properties.name &&
             f.id !== id &&
-            !syncedFoundSet.has(+f.id!) &&
-            f.properties.type === "metro"
+            !syncedFoundSet.has(+f.id!)
           ) {
             syncedFound.push(f.id! as number);
             syncedFoundSet.add(+f.id!);
           }
         });
 
-        if (feature.properties.type === "metro") {
-          syncedFound.push(id);
-          syncedFoundSet.add(id);
-        }
+        syncedFound.push(id);
+        syncedFoundSet.add(id);
       }
 
       setFound(syncedFound);
@@ -99,16 +97,6 @@ export default function Home() {
     return localFound || [];
   }, [localFound]);
 
-  useEffect(() => {
-    if (map && hideLabels) {
-      map.setLayoutProperty("voies-labels", "visibility", "none");
-      map.setLayoutProperty("metro-labels", "visibility", "none");
-    } else if (map) {
-      map.setLayoutProperty("voies-labels", "visibility", "visible");
-      map.setLayoutProperty("metro-labels", "visibility", "visible");
-    }
-  }, [hideLabels, map]);
-
   const onReset = useCallback(() => {
     if (confirm("Vous allez perdre votre progression. Êtes-vous sûr ?")) {
       setFound([]);
@@ -116,20 +104,11 @@ export default function Home() {
     }
   }, [setFound, setIsNewPlayer]);
 
-  const foundStationsPercentage = useMemo(() => {
-    return sumBy(
-      found,
-      (id) =>
-        (idMap.get(id)?.properties.type === "metro" ? 1 : 0) /
-        fc.properties.totalStations
-    );
-  }, [found, idMap]);
-
   const foundStationsPerLine = useMemo(() => {
     const foundStationsPerLine: { [key: string]: number } = {};
     for (let id of found || []) {
       const feature = idMap.get(id);
-      if (!feature || feature.properties.type !== "metro") {
+      if (!feature) {
         continue;
       }
       const line = feature.properties.line;
@@ -252,7 +231,6 @@ export default function Home() {
       });
 
       mapboxMap.addLayer({
-        filter: ["match", ["get", "type"], ["metro"], true, false],
         type: "circle",
         source: "paris",
         id: "metro-circles",
@@ -342,7 +320,6 @@ export default function Home() {
           "text-offset": [0, -0.5],
           "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 22, 14],
         },
-        filter: ["match", ["get", "type"], ["metro"], true, false],
         type: "symbol",
         source: "paris",
         id: "metro-labels",
@@ -489,7 +466,6 @@ export default function Home() {
         <div className="absolute w-96 max-w-screen mx-2 h-12 top-4 lg:top-32">
           <FoundSummary
             className="mb-4 lg:hidden bg-white rounded-lg shadow-md p-4"
-            foundStationsPercentage={foundStationsPercentage}
             foundStationsPerLine={foundStationsPerLine}
             stationsPerLine={fc.properties.stationsPerLine}
           />
@@ -513,7 +489,6 @@ export default function Home() {
       </div>
       <div className="h-full p-6 overflow-y-auto xl:w-[32rem] lg:w-96 hidden shadow-lg lg:block bg-blue-50">
         <FoundSummary
-          foundStationsPercentage={foundStationsPercentage}
           foundStationsPerLine={foundStationsPerLine}
           stationsPerLine={fc.properties.stationsPerLine}
         />
@@ -531,7 +506,9 @@ export default function Home() {
         inputRef={inputRef}
         open={isNewPlayer}
         setOpen={setIsNewPlayer}
-      />
+      >
+        Tapez le nom d&apos;une station de métro, puis appuyez sur Entrée.
+      </IntroModal>
     </main>
   );
 }

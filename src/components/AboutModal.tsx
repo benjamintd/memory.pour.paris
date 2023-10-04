@@ -41,7 +41,7 @@ export default function AboutModal({
                       as="h3"
                       className="text-base font-bold leading-6 text-gray-900"
                     >
-                      Les rues de Paris
+                      Memory Pour Paris
                     </Dialog.Title>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500">

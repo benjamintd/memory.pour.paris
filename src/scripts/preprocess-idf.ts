@@ -3,6 +3,7 @@ import { Feature, FeatureCollection, LineString, Point } from "geojson";
 import turf from "@turf/turf";
 import { groupBy, mapValues } from "lodash";
 import { promises as fs } from "fs";
+import { LINES } from "@/lib/constants";
 
 const Bun = {
   file(path: string) {
@@ -24,23 +25,33 @@ const main = async () => {
 
   const stationsCollection = (await stations.json()) as FeatureCollection<
     Point,
-    { id_gares: number; nom_gares: string; res_com: string; nom_zdc: string }
+    {
+      id_gares: number;
+      nom_gares: string;
+      res_com: string;
+      nom_zdc: string;
+      mode: string;
+    }
   >;
 
-  const featuresStations = stationsCollection.features.map((feature) => {
-    const id = +`${100}${feature.properties.id_gares}`;
-    return {
-      ...feature,
-      properties: {
+  const availableLines = new Set(Object.keys(LINES));
+
+  const featuresStations = stationsCollection.features
+    .map((feature) => {
+      const id = +`${100}${feature.properties.id_gares}`;
+      return {
+        ...feature,
+        properties: {
+          id,
+          name: feature.properties.nom_zdc,
+          long_name: feature.properties.nom_gares,
+          type: feature.properties.mode,
+          line: feature.properties.res_com,
+        },
         id,
-        name: feature.properties.nom_zdc,
-        long_name: feature.properties.nom_gares,
-        type: "metro",
-        line: feature.properties.res_com,
-      },
-      id,
-    };
-  });
+      };
+    })
+    .filter((f) => availableLines.has(f.properties.line));
 
   Bun.write(
     path.join(__dirname, "../data/features-idf.json"),

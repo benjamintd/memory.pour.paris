@@ -9,13 +9,11 @@ import MetroProgressBars from "./MetroProgressBars";
 const FoundSummary = ({
   className,
   foundStreetsPercentage,
-  foundStationsPercentage,
   foundStationsPerLine,
   stationsPerLine,
 }: {
   className?: string;
   foundStreetsPercentage?: number;
-  foundStationsPercentage: number;
   foundStationsPerLine: Record<string, number>;
   stationsPerLine: Record<string, number>;
 }) => {
@@ -120,20 +118,13 @@ const FoundSummary = ({
           </div>
         </>
       )}
-      <p className="mb-2">
-        <span className="text-lg @md:text-2xl font-bold">
-          {(foundStationsPercentage * 100).toFixed(1)}
-        </span>{" "}
-        <span className="text-lg @md:text-xl">%</span>{" "}
-        <span className="text-sm">des stations de métro trouvées</span>
-      </p>
       {["METRO", "RER", "TRAM", "TRAIN"].map((mode) => {
         if (!foundStationsPerMode[mode]) {
           return null;
         }
 
         return (
-          <Fragment key={mode}>
+          <div key={mode} className="mb-2">
             <p className="mb-2">
               <span className="text-lg @md:text-2xl font-bold">
                 {((foundStationsPerMode[mode] || 0) * 100).toFixed(1)}
@@ -149,7 +140,7 @@ const FoundSummary = ({
                 stationsPerLine={stationsPerLine}
               />
             )}
-          </Fragment>
+          </div>
         );
       })}
     </div>

@@ -9,12 +9,12 @@ const MetroProgressBars = ({
   stationsPerLine: Record<string, number>;
 }) => {
   return (
-    <div className="@container grid grid-cols-[repeat(8,minmax(0,1fr))] grid-rows-2 gap-1">
+    <div className="@container grid grid-cols-[repeat(8,min-content)] grid-rows-2 gap-2">
       {METRO_LINES.map((line) => {
         return (
           <div
             key={line}
-            className="relative h-6 @md:h-8 aspect-square flex items-center justify-center"
+            className="relative h-6 w-6 @md:h-8 @md:w-8 flex items-center justify-center"
           >
             <div className="absolute w-full h-full z-10">
               <CircularProgressbar
