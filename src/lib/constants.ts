@@ -292,14 +292,15 @@ export const LINES: {
     order: 211,
     mode: "TRAM",
   },
-  "TRAM 12": {
-    name: "T12",
-    color: "##B90845",
-    backgroundColor: "#781815",
-    textColor: "#fff",
-    order: 212,
-    mode: "TRAM",
-  },
+  // pas en service
+  // "TRAM 12": {
+  //   name: "T12",
+  //   color: "##B90845",
+  //   backgroundColor: "#781815",
+  //   textColor: "#fff",
+  //   order: 212,
+  //   mode: "TRAM",
+  // },
   "TRAM 13": {
     name: "T13",
     color: "#875F30",
