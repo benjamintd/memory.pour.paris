@@ -5,7 +5,6 @@ import data from "@/data/features-idf.json";
 import Fuse from "fuse.js";
 import { useLocalStorageValue } from "@react-hookz/web";
 import mapboxgl from "mapbox-gl";
-import { sumBy } from "lodash";
 import { coordEach } from "@turf/meta";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "react-circular-progressbar/dist/styles.css";
@@ -376,6 +375,7 @@ export default function Home() {
             foundStationsPerLine={foundStationsPerLine}
             stationsPerLine={fc.properties.stationsPerLine}
             minimizable
+            defaultMinimized
           />
           <div className="flex gap-2 lg:gap-4">
             <Input
@@ -400,7 +400,6 @@ export default function Home() {
           foundStationsPerLine={foundStationsPerLine}
           stationsPerLine={fc.properties.stationsPerLine}
           minimizable
-          defaultMinimized
         />
         <hr className="w-full border-b border-blue-100 my-4" />
         <FoundList
