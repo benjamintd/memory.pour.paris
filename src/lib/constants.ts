@@ -196,6 +196,14 @@ export const LINES: {
     order: 105,
     mode: "RER",
   },
+  "TRAM 1": {
+    name: "T1",
+    color: "#0064b6",
+    backgroundColor: "#003258",
+    textColor: "#fff",
+    order: 202,
+    mode: "TRAM",
+  },
   "TRAM 2": {
     name: "T2",
     color: "#B34A8F",

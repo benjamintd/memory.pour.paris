@@ -42,6 +42,7 @@ const Input = ({
       const results = fuse.search(sanitizedSearch);
       let someAlreadyFound = false;
       const matches: number[] = [];
+      console.log(results);
       for (let i = 0; i < results.length; i++) {
         const result = results[i];
         if (

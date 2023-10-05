@@ -18,15 +18,17 @@ const FoundSummary = ({
   foundStationsPerLine,
   stationsPerLine,
   minimizable = false,
+  defaultMinimized = false,
 }: {
   className?: string;
   foundStreetsPercentage?: number;
   foundStationsPerLine: Record<string, number>;
   stationsPerLine: Record<string, number>;
   minimizable?: boolean;
+  defaultMinimized?: boolean;
 }) => {
   const previousFound = usePrevious(foundStationsPerLine);
-  const [minimized, setMinimized] = useState<boolean>(false);
+  const [minimized, setMinimized] = useState<boolean>(defaultMinimized);
 
   useEffect(() => {
     // confetti when new line is 100%
@@ -103,20 +105,6 @@ const FoundSummary = ({
         "grid grid-cols-2 gap-2": minimized,
       })}
     >
-      {minimizable && (
-        <div className="absolute top-0 right-0">
-          <button
-            onClick={() => setMinimized(!minimized)}
-            className="text-gray-500 rounded-full flex items-center justify-center bg-white shadow w-8 h-8"
-          >
-            {minimized ? (
-              <MaximizeIcon className="w-4 h-4" />
-            ) : (
-              <MinimizeIcon className="w-4 h-4" />
-            )}
-          </button>
-        </div>
-      )}
       {foundStreetsPercentage !== undefined && !minimized && (
         <>
           <p className="mb-2">
@@ -193,6 +181,20 @@ const FoundSummary = ({
           </div>
         );
       })}
+      {minimizable && (
+        <div className="absolute bottom-0 right-0">
+          <button
+            onClick={() => setMinimized(!minimized)}
+            className="text-gray-500 rounded-full flex items-center justify-center bg-white shadow w-8 h-8 my-1 mx-2"
+          >
+            {minimized ? (
+              <MaximizeIcon className="w-4 h-4" />
+            ) : (
+              <MinimizeIcon className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
