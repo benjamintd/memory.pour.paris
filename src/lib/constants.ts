@@ -201,7 +201,7 @@ export const LINES: {
     color: "#0064b6",
     backgroundColor: "#003258",
     textColor: "#fff",
-    order: 202,
+    order: 201,
     mode: "TRAM",
   },
   "TRAM 2": {
@@ -292,15 +292,14 @@ export const LINES: {
     order: 211,
     mode: "TRAM",
   },
-  //  pas encore en service
-  // "TRAM 12": {
-  //   name: "T12",
-  //   color: "blue",
-  //   backgroundColor: "#356f41",
-  //   textColor: "#222",
-  //   order: 202.7,
-  //   mode: "TRAM",
-  // },
+  "TRAM 12": {
+    name: "T12",
+    color: "##B90845",
+    backgroundColor: "#781815",
+    textColor: "#fff",
+    order: 212,
+    mode: "TRAM",
+  },
   "TRAM 13": {
     name: "T13",
     color: "#875F30",
