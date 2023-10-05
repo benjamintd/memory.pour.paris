@@ -122,8 +122,8 @@ const FoundList = ({
       {sorted.length > 0 && (
         <div className="flex justify-between items-center mb-4">
           <div>
-            <p className="text-sm uppercase text-blue-900">
-              {sorted.length} éléments
+            <p className="text-sm uppercase text-blue-900 text-opacity-75">
+              {sorted.length} stations
             </p>
             {foundStreetsKm !== undefined && (
               <p className="text-xs uppercase text-blue-900">

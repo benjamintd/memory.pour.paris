@@ -195,47 +195,6 @@ export default function Home() {
       });
 
       mapboxMap.addLayer({
-        id: "voies-hover",
-        type: "line",
-        paint: {
-          "line-color": "#fde047", // yellow-500
-          "line-width": 16,
-          "line-blur": 10,
-        },
-        source: "hovered",
-        filter: ["==", "$type", "LineString"],
-      });
-
-      mapboxMap.addLayer({
-        id: "voies",
-        type: "line",
-        paint: {
-          "line-color": [
-            "case",
-            ["to-boolean", ["feature-state", "found"]],
-            "#2563eb", // blue-500
-            "rgba(230, 235, 239, 0)",
-          ],
-          "line-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            12,
-            ["case", ["to-boolean", ["feature-state", "found"]], 2, 1],
-            16,
-            ["case", ["to-boolean", ["feature-state", "found"]], 6, 4],
-          ],
-        },
-        layout: {
-          "line-join": "round",
-          "line-cap": "round",
-          "line-sort-key": ["get", "length"],
-        },
-        source: "paris",
-        filter: ["==", "$type", "LineString"],
-      });
-
-      mapboxMap.addLayer({
         type: "circle",
         source: "paris",
         id: "metro-circles",
@@ -287,36 +246,6 @@ export default function Home() {
       });
 
       mapboxMap.addLayer({
-        id: "voies-labels",
-        type: "symbol",
-        paint: {
-          "text-halo-color": [
-            "case",
-            ["to-boolean", ["feature-state", "found"]],
-            "rgb(255, 255, 255)",
-            "rgba(0, 0, 0, 0)",
-          ],
-          "text-halo-width": 2,
-          "text-halo-blur": 1,
-          "text-color": [
-            "case",
-            ["to-boolean", ["feature-state", "found"]],
-            "rgb(120, 132, 127)",
-            "rgba(0, 0, 0, 0)",
-          ],
-        },
-        layout: {
-          "text-field": ["to-string", ["get", "short_name"]],
-          "text-font": ["Parisine Regular", "Arial Unicode MS Regular"],
-          "symbol-placement": "line",
-          "symbol-avoid-edges": true,
-          "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 22, 16],
-        },
-        source: "paris",
-        filter: ["==", "$type", "LineString"],
-      });
-
-      mapboxMap.addLayer({
         minzoom: 11,
         layout: {
           "text-field": ["to-string", ["get", "name"]],
@@ -347,33 +276,6 @@ export default function Home() {
       });
 
       mapboxMap.addLayer({
-        id: "hover-label-line",
-        type: "symbol",
-        paint: {
-          "text-halo-color": "rgb(255, 255, 255)",
-          "text-halo-width": 2,
-          "text-halo-blur": 1,
-          "text-color": "rgb(29, 40, 53)",
-        },
-        layout: {
-          "text-field": [
-            "coalesce",
-            ["get", "long_name"],
-            ["get", "short_name"],
-            "",
-          ],
-          "text-font": ["Parisine Bold", "Arial Unicode MS Regular"],
-          "text-anchor": "center",
-          "text-offset": [0, -0.6],
-          "text-size": ["interpolate", ["linear"], ["zoom"], 11, 14, 22, 16],
-          "symbol-placement": "point",
-          "text-padding": 30,
-        },
-        source: "hovered",
-        filter: ["==", "$type", "LineString"],
-      });
-
-      mapboxMap.addLayer({
         id: "hover-label-point",
         type: "symbol",
         paint: {
@@ -400,7 +302,7 @@ export default function Home() {
 
       mapboxMap.once("idle", () => {
         setMap((map) => (map === null ? mapboxMap : map));
-        mapboxMap.on("mousemove", ["voies", "metro-circles"], (e) => {
+        mapboxMap.on("mousemove", ["metro-circles"], (e) => {
           if (e.features && e.features.length > 0) {
             const feature = e.features.find((f) => f.state.found && f.id);
             if (feature && feature.id) {
@@ -411,7 +313,7 @@ export default function Home() {
           setHoveredId(null);
         });
 
-        mapboxMap.on("mouseleave", ["voies", "metro-circles"], () => {
+        mapboxMap.on("mouseleave", ["metro-circles"], () => {
           setHoveredId(null);
         });
       });
@@ -493,10 +395,11 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <div className="h-full p-6 overflow-y-auto xl:w-[32rem] lg:w-96 hidden shadow-lg lg:block bg-blue-50">
+      <div className="h-full p-6 z-10 overflow-y-auto xl:w-[32rem] lg:w-96 hidden shadow-lg lg:block bg-blue-50">
         <FoundSummary
           foundStationsPerLine={foundStationsPerLine}
           stationsPerLine={fc.properties.stationsPerLine}
+          minimizable
         />
         <hr className="w-full border-b border-blue-100 my-4" />
         <FoundList

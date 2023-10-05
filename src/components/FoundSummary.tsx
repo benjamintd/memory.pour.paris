@@ -104,15 +104,15 @@ const FoundSummary = ({
       })}
     >
       {minimizable && (
-        <div className="absolute top-0 right-0 p-2">
+        <div className="absolute top-0 right-0">
           <button
             onClick={() => setMinimized(!minimized)}
-            className="text-gray-500 rounded-full -m-1 flex items-center justify-center w-8 h-8"
+            className="text-gray-500 rounded-full flex items-center justify-center bg-white shadow w-8 h-8"
           >
             {minimized ? (
-              <MaximizeIcon className="w-6 h-6" />
+              <MaximizeIcon className="w-4 h-4" />
             ) : (
-              <MinimizeIcon className="w-6 h-6" />
+              <MinimizeIcon className="w-4 h-4" />
             )}
           </button>
         </div>
@@ -146,7 +146,7 @@ const FoundSummary = ({
         </>
       )}
       {["METRO", "RER", "TRAM", "TRAIN"].map((mode) => {
-        if (!foundStationsPerMode[mode]) {
+        if (!foundStationsPerMode[mode] && mode !== "METRO") {
           return null;
         }
 
