@@ -55,6 +55,13 @@ export default function Home() {
     return map;
   }, [fc]);
 
+  const { value: localFound, set: setFound } = useLocalStorageValue<
+    number[] | null
+  >("paris-stations", {
+    defaultValue: null,
+    initializeWithValue: false,
+  });
+
   const { value: legacyLocalFound, set: legacySetFound } = useLocalStorageValue<
     number[]
   >("paris-streets", {
@@ -62,27 +69,16 @@ export default function Home() {
     initializeWithValue: false,
   });
 
-  const { value: localFound, set: setFound } = useLocalStorageValue<number[]>(
-    "paris-stations",
-    {
-      defaultValue: [],
-      initializeWithValue: false,
-    }
-  );
-
   useEffect(() => {
+    console.log(legacyLocalFound, localFound, idMap, fc);
     // @todo synchronize to the new key, and add the stations that have the same name as already found ones.
-    if (
-      legacyLocalFound &&
-      legacyLocalFound.length > 0 &&
-      (localFound || []).length === 0
-    ) {
+    if (legacyLocalFound && legacyLocalFound.length > 0 && !localFound) {
       window.alert(
         "La page a changé pour se concentrer sur les stations de métro. Vos stations existantes vont être importées.\n Vous pouvez trouver un lien vers l'ancien jeu avec les rues dans le menu."
       );
       setFound(augmentResults(legacyLocalFound, idMap, fc));
     }
-  }, [legacyLocalFound, setFound, localFound, idMap, legacySetFound, fc]);
+  }, [legacyLocalFound, localFound, fc, idMap, setFound]);
 
   const { value: isNewPlayer, set: setIsNewPlayer } =
     useLocalStorageValue<boolean>("paris-streets-is-new-player", {
@@ -96,7 +92,7 @@ export default function Home() {
 
   const previousFc = usePrevious(fc);
   useEffect(() => {
-    if (previousFc !== fc) {
+    if (previousFc !== fc && found.length > 0) {
       setFound(augmentResults(found, idMap, fc));
     }
   }, [fc, idMap, setFound, found, previousFc]);

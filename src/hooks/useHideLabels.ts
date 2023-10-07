@@ -6,11 +6,16 @@ const useHideLabels = (map: mapboxgl.Map | null) => {
 
   useEffect(() => {
     if (map && hideLabels) {
-      map.setLayoutProperty("voies-labels", "visibility", "none");
-      map.setLayoutProperty("metro-labels", "visibility", "none");
-    } else if (map) {
-      map.setLayoutProperty("voies-labels", "visibility", "visible");
-      map.setLayoutProperty("metro-labels", "visibility", "visible");
+      if (map.getLayer("voies-labels")) {
+        map.setLayoutProperty("voies-labels", "visibility", "none");
+
+        map.setLayoutProperty("metro-labels", "visibility", "none");
+      } else if (map) {
+        if (map.getLayer("voies-labels")) {
+          map.setLayoutProperty("voies-labels", "visibility", "visible");
+        }
+        map.setLayoutProperty("metro-labels", "visibility", "visible");
+      }
     }
   }, [hideLabels, map]);
 
