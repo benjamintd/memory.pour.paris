@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 
-export default function AboutModal({
+export default function StripeModal({
   open,
   setOpen,
 }: {
@@ -41,34 +41,8 @@ export default function AboutModal({
                       as="h3"
                       className="text-base font-bold leading-6 text-gray-900"
                     >
-                      Memory Pour Paris
+                      Bien joué !
                     </Dialog.Title>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        Fait avec ❤️ par{" "}
-                        <a
-                          href="https://twitter.com/_benjamintd"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-blue-600 hover:text-blue-500"
-                        >
-                          Benjamin TD
-                        </a>{" "}
-                        (benjamin.tdm@gmail.com).
-                      </p>
-                      <p className="text-sm text-gray-500 mt-2">
-                        Inspiré par{" "}
-                        <a
-                          href="https://carvin.github.io/sf-street-names/"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-blue-600 hover:text-blue-500"
-                        >
-                          Chris Arvin
-                        </a>{" "}
-                        qui a créé ce jeu pour San Francisco.
-                      </p>
-                    </div>
                   </div>
                 </div>
                 <div className="mt-5 sm:mt-6">

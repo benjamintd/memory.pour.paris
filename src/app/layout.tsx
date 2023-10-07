@@ -21,11 +21,11 @@ const font = localFont({
 export const metadata: Metadata = {
   title: "Paris de tête",
   description:
-    "Quel pourcentage des rues et stations de métro de Paris connaissez-vous de tête ?",
+    "Quel pourcentage des stations de métro de Paris connaissez-vous de tête ?",
   openGraph: {
     title: "Paris de tête",
     description:
-      "Quel pourcentage des rues et stations de métro de Paris connaissez-vous de tête ?",
+      "Quel pourcentage des stations de métro de Paris connaissez-vous de tête ?",
     type: "website",
     locale: "fr_FR",
     url: "https://memory.pour.paris",
@@ -38,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr">
+    <html className={font.className} lang="fr">
       <body className={font.className}>{children}</body>
       <Analytics />
     </html>

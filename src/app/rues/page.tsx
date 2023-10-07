@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import data from "@/data/features-idf.json";
+import data from "@/data/features.json";
 import Fuse from "fuse.js";
 import { useLocalStorageValue } from "@react-hookz/web";
 import mapboxgl from "mapbox-gl";
@@ -14,17 +14,19 @@ import IntroModal from "@/components/IntroModal";
 import removeAccents from "@/lib/removeAccents";
 import FoundSummary from "@/components/FoundSummary";
 import FoundList from "@/components/FoundList";
-import { IDFDataFeatureCollection, DataFeature } from "@/lib/types";
+import { DataFeatureCollection, DataFeature } from "@/lib/types";
 import Input from "@/components/Input";
-import { METRO, METRO_LINES } from "@/lib/constants";
+import { LINES, METRO_LINES } from "@/lib/constants";
+import useHideLabels from "@/hooks/useHideLabels";
+import getMode from "@/lib/getMode";
 
-const fc = data as IDFDataFeatureCollection;
+const fc = data as DataFeatureCollection;
 
 export default function Home() {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
-  const [hideLabels, setHideLabels] = useState<boolean>(false);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const { hideLabels, setHideLabels } = useHideLabels(map);
 
   const idMap = useMemo(() => {
     const map = new Map<number, DataFeature>();
@@ -52,16 +54,6 @@ export default function Home() {
     return localFound || [];
   }, [localFound]);
 
-  useEffect(() => {
-    if (map && hideLabels) {
-      map.setLayoutProperty("voies-labels", "visibility", "none");
-      map.setLayoutProperty("metro-labels", "visibility", "none");
-    } else if (map) {
-      map.setLayoutProperty("voies-labels", "visibility", "visible");
-      map.setLayoutProperty("metro-labels", "visibility", "visible");
-    }
-  }, [hideLabels, map]);
-
   const onReset = useCallback(() => {
     if (confirm("Vous allez perdre votre progression. Êtes-vous sûr ?")) {
       setFound([]);
@@ -69,12 +61,11 @@ export default function Home() {
     }
   }, [setFound, setIsNewPlayer]);
 
-  const foundStationsPercentage = useMemo(() => {
+  const foundStreetsPercentage = useMemo(() => {
     return sumBy(
       found,
       (id) =>
-        (idMap.get(id)?.properties.type === "metro" ? 1 : 0) /
-        fc.properties.totalStations
+        (idMap.get(id)?.properties.length || 0) / fc.properties.totalLength
     );
   }, [found, idMap]);
 
@@ -125,12 +116,12 @@ export default function Home() {
 
     const mapboxMap = new mapboxgl.Map({
       container: "map",
-      style: "mapbox://styles/benjamintd/clna5eqeb03go01qu5owb83oq",
+      style: "mapbox://styles/benjamintd/cln2v5u5m01cn01qn02po0po5",
       bounds: [
         [2.21, 48.815573],
         [2.47, 48.91],
       ],
-      minZoom: 6,
+      minZoom: 11,
       fadeDuration: 50,
     });
 
@@ -225,7 +216,7 @@ export default function Home() {
             [
               "match",
               ["get", "line"],
-              ...METRO_LINES.flatMap((line) => [[line], METRO[line].color]),
+              ...METRO_LINES.flatMap((line) => [[line], LINES[line].color]),
               "rgba(255, 255, 255, 0.8)",
             ],
             "rgba(255, 255, 255, 0.8)",
@@ -238,7 +229,7 @@ export default function Home() {
               ["get", "line"],
               ...METRO_LINES.flatMap((line) => [
                 [line],
-                METRO[line].backgroundColor,
+                LINES[line]?.backgroundColor,
               ]),
               "rgba(255, 255, 255, 0.8)",
             ],
@@ -432,6 +423,39 @@ export default function Home() {
     [map, idMap]
   );
 
+  const foundStationsPerMode = useMemo(() => {
+    const stationsPerLine = fc.properties.stationsPerLine;
+    let foundStationsPercentagePerMode: Record<string, number> = {};
+    for (let line of Object.keys(foundStationsPerLine)) {
+      const mode = getMode(line);
+
+      if (!foundStationsPercentagePerMode[mode]) {
+        foundStationsPercentagePerMode[mode] = 0;
+      }
+
+      foundStationsPercentagePerMode[mode] += foundStationsPerLine[line];
+    }
+
+    const stationsPerMode = Object.keys(stationsPerLine).reduce((acc, line) => {
+      const mode = getMode(line);
+
+      if (!acc[mode]) {
+        acc[mode] = 0;
+      }
+
+      acc[mode] += stationsPerLine[line];
+
+      return acc;
+    }, {} as Record<string, number>);
+
+    // normalize
+    for (let mode of Object.keys(foundStationsPercentagePerMode)) {
+      foundStationsPercentagePerMode[mode] /= stationsPerMode[mode];
+    }
+
+    return foundStationsPercentagePerMode;
+  }, [foundStationsPerLine]);
+
   return (
     <main className="flex flex-row items-center justify-between h-screen">
       <div className="relative flex justify-center h-full grow">
@@ -439,9 +463,10 @@ export default function Home() {
         <div className="absolute w-96 max-w-screen mx-2 h-12 top-4 lg:top-32">
           <FoundSummary
             className="mb-4 lg:hidden bg-white rounded-lg shadow-md p-4"
-            foundStationsPercentage={foundStationsPercentage}
+            foundStreetsPercentage={foundStreetsPercentage}
             foundStationsPerLine={foundStationsPerLine}
             stationsPerLine={fc.properties.stationsPerLine}
+            foundStationsPerMode={foundStationsPerMode}
           />
           <div className="flex gap-2 lg:gap-4">
             <Input
@@ -463,12 +488,14 @@ export default function Home() {
       </div>
       <div className="h-full p-6 overflow-y-auto xl:w-[32rem] lg:w-96 hidden shadow-lg lg:block bg-blue-50">
         <FoundSummary
-          foundStationsPercentage={foundStationsPercentage}
+          foundStreetsPercentage={foundStreetsPercentage}
           foundStationsPerLine={foundStationsPerLine}
           stationsPerLine={fc.properties.stationsPerLine}
+          foundStationsPerMode={foundStationsPerMode}
         />
         <hr className="w-full border-b border-blue-100 my-4" />
         <FoundList
+          foundStreetsKm={foundStreetsPercentage * fc.properties.totalLength}
           found={found}
           idMap={idMap}
           setHoveredId={setHoveredId}
@@ -481,7 +508,9 @@ export default function Home() {
         inputRef={inputRef}
         open={isNewPlayer}
         setOpen={setIsNewPlayer}
-      />
+      >
+        Tapez le nom d&apos;une rue de Paris, puis appuyez sur Entrée.
+      </IntroModal>
     </main>
   );
 }

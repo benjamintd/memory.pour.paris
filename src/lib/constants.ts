@@ -1,3 +1,5 @@
+export const BEG_THRESHOLD = 1.01; // @todo put back down
+
 export const METRO_LINES = [
   "METRO 1",
   "METRO 2",
@@ -17,13 +19,14 @@ export const METRO_LINES = [
   "METRO 14",
 ];
 
-export const METRO: {
+export const LINES: {
   [name: string]: {
     name: string;
     color: string;
     backgroundColor: string;
     textColor: string;
     order: number;
+    mode: "METRO" | "RER" | "TRAM" | "TRAIN" | "OTHER";
   };
 } = {
   "METRO 1": {
@@ -32,6 +35,7 @@ export const METRO: {
     backgroundColor: "#806700",
     textColor: "#222",
     order: 1,
+    mode: "METRO",
   },
   "METRO 2": {
     name: "2",
@@ -39,6 +43,7 @@ export const METRO: {
     backgroundColor: "#003258",
     textColor: "#fff",
     order: 2,
+    mode: "METRO",
   },
   "METRO 3": {
     name: "3",
@@ -46,6 +51,7 @@ export const METRO: {
     backgroundColor: "#4f4c12",
     textColor: "#fff",
     order: 3,
+    mode: "METRO",
   },
   "METRO 3bis": {
     name: "3b",
@@ -53,6 +59,7 @@ export const METRO: {
     backgroundColor: "#2a7f93",
     textColor: "#222",
     order: 3.5,
+    mode: "METRO",
   },
   "METRO 4": {
     name: "4",
@@ -60,6 +67,7 @@ export const METRO: {
     backgroundColor: "#602049",
     textColor: "#fff",
     order: 4,
+    mode: "METRO",
   },
   "METRO 5": {
     name: "5",
@@ -67,6 +75,7 @@ export const METRO: {
     backgroundColor: "#90440a",
     textColor: "#222",
     order: 5,
+    mode: "METRO",
   },
   "METRO 6": {
     name: "6",
@@ -74,6 +83,7 @@ export const METRO: {
     backgroundColor: "#356f41",
     textColor: "#222",
     order: 6,
+    mode: "METRO",
   },
   "METRO 7": {
     name: "7",
@@ -81,6 +91,7 @@ export const METRO: {
     backgroundColor: "#b41843",
     textColor: "#222",
     order: 7,
+    mode: "METRO",
   },
   "METRO 7bis": {
     name: "7b",
@@ -88,6 +99,7 @@ export const METRO: {
     backgroundColor: "#356f41",
     textColor: "#222",
     order: 7.5,
+    mode: "METRO",
   },
   "METRO 8": {
     name: "8",
@@ -95,6 +107,7 @@ export const METRO: {
     backgroundColor: "#76447c",
     textColor: "#222",
     order: 8,
+    mode: "METRO",
   },
   "METRO 9": {
     name: "9",
@@ -102,6 +115,7 @@ export const METRO: {
     backgroundColor: "#6a6400",
     textColor: "#222",
     order: 9,
+    mode: "METRO",
   },
   "METRO 10": {
     name: "10",
@@ -109,6 +123,7 @@ export const METRO: {
     backgroundColor: "#775c10",
     textColor: "#222",
     order: 10,
+    mode: "METRO",
   },
   "METRO 11": {
     name: "11",
@@ -116,6 +131,7 @@ export const METRO: {
     backgroundColor: "#462f15",
     textColor: "#fff",
     order: 11,
+    mode: "METRO",
   },
   "METRO 12": {
     name: "12",
@@ -123,6 +139,7 @@ export const METRO: {
     backgroundColor: "#004027",
     textColor: "#fff",
     order: 12,
+    mode: "METRO",
   },
   "METRO 13": {
     name: "13",
@@ -130,6 +147,7 @@ export const METRO: {
     backgroundColor: "#2a7f93",
     textColor: "#222",
     order: 13,
+    mode: "METRO",
   },
   "METRO 14": {
     name: "14",
@@ -137,5 +155,232 @@ export const METRO: {
     backgroundColor: "#331241",
     textColor: "#fff",
     order: 14,
+    mode: "METRO",
   },
+  // @todo from here it's dummy data
+  "RER A": {
+    name: "A",
+    color: "#D22D27",
+    backgroundColor: "#781815",
+    textColor: "#fff",
+    order: 101,
+    mode: "RER",
+  },
+  "RER B": {
+    name: "B",
+    color: "#6092CA",
+    backgroundColor: "#2B5381",
+    textColor: "#fff",
+    order: 102,
+    mode: "RER",
+  },
+  "RER C": {
+    name: "C",
+    color: "#F8D047",
+    backgroundColor: "#806700",
+    textColor: "#222",
+    order: 103,
+    mode: "RER",
+  },
+  "RER D": {
+    name: "D",
+    color: "#387F52",
+    backgroundColor: "#1C5731",
+    textColor: "#fff",
+    order: 104,
+    mode: "RER",
+  },
+  "RER E": {
+    name: "E",
+    color: "#B34A8F",
+    backgroundColor: "#621D4A",
+    textColor: "#fff",
+    order: 105,
+    mode: "RER",
+  },
+  "TRAM 1": {
+    name: "T1",
+    color: "#0064b6",
+    backgroundColor: "#003258",
+    textColor: "#fff",
+    order: 201,
+    mode: "TRAM",
+  },
+  "TRAM 2": {
+    name: "T2",
+    color: "#B34A8F",
+    backgroundColor: "#621D4A",
+    textColor: "#fff",
+    order: 202,
+    mode: "TRAM",
+  },
+  "TRAM 3a": {
+    name: "T3a",
+    color: "#E59351",
+    backgroundColor: "#945522",
+    textColor: "#fff",
+    order: 203,
+    mode: "TRAM",
+  },
+  "TRAM 3b": {
+    name: "T3b",
+    color: "#387F52",
+    backgroundColor: "#154928",
+    textColor: "#fff",
+    order: 203.5,
+    mode: "TRAM",
+  },
+  "TRAM 4": {
+    name: "T4",
+    color: "#DCB547",
+    backgroundColor: "#79611B",
+    textColor: "#fff",
+    order: 204,
+    mode: "TRAM",
+  },
+  "TRAM 5": {
+    name: "T5",
+    color: "#5E277F",
+    backgroundColor: "#310B47",
+    textColor: "#fff",
+    order: 205,
+    mode: "TRAM",
+  },
+  "TRAM 6": {
+    name: "T6",
+    color: "#D22D27",
+    backgroundColor: "#88140F",
+    textColor: "#fff",
+    order: 206,
+    mode: "TRAM",
+  },
+  "TRAM 7": {
+    name: "T7",
+    color: "#875F30",
+    backgroundColor: "#563814",
+    textColor: "#fff",
+    order: 207,
+    mode: "TRAM",
+  },
+  "TRAM 8": {
+    name: "T8",
+    color: "#9F993A",
+    backgroundColor: "#585413",
+    textColor: "#fff",
+    order: 208,
+    mode: "TRAM",
+  },
+  "TRAM 9": {
+    name: "T9",
+    color: "#6092CA",
+    backgroundColor: "#204570",
+    textColor: "#fff",
+    order: 209,
+    mode: "TRAM",
+  },
+  "TRAM 10": {
+    name: "T10",
+    color: "#9F993A",
+    backgroundColor: "#5F5A16",
+    textColor: "#fff",
+    order: 210,
+    mode: "TRAM",
+  },
+  "TRAM 11": {
+    name: "T11",
+    color: "#E59351",
+    backgroundColor: "#985723",
+    textColor: "#fff",
+    order: 211,
+    mode: "TRAM",
+  },
+  // pas en service
+  // "TRAM 12": {
+  //   name: "T12",
+  //   color: "##B90845",
+  //   backgroundColor: "#781815",
+  //   textColor: "#fff",
+  //   order: 212,
+  //   mode: "TRAM",
+  // },
+  "TRAM 13": {
+    name: "T13",
+    color: "#875F30",
+    backgroundColor: "#4B3112",
+    textColor: "#fff",
+    order: 202.7,
+    mode: "TRAM",
+  },
+  "TRAIN H": {
+    name: "H",
+    color: "#875F30",
+    backgroundColor: "#4B3112",
+    textColor: "#fff",
+    order: 301,
+    mode: "TRAIN",
+  },
+  "TRAIN J": {
+    name: "J",
+    color: "#D4CA42",
+    backgroundColor: "#746D14",
+    textColor: "#222",
+    order: 302,
+    mode: "TRAIN",
+  },
+  "TRAIN K": {
+    name: "K",
+    color: "#9F993A",
+    backgroundColor: "#68631A",
+    textColor: "#fff",
+    order: 303,
+    mode: "TRAIN",
+  },
+  "TRAIN L": {
+    name: "L",
+    color: "#CAB1D1",
+    backgroundColor: "#70437C",
+    textColor: "#222",
+    order: 304,
+    mode: "TRAIN",
+  },
+  "TRAIN N": {
+    name: "N",
+    color: "#4AA791",
+    backgroundColor: "#1D6B59",
+    textColor: "#fff",
+    order: 305,
+    mode: "TRAIN",
+  },
+  "TRAIN P": {
+    name: "P",
+    color: "#E59351",
+    backgroundColor: "#6D3C15",
+    textColor: "#222",
+    order: 306,
+    mode: "TRAIN",
+  },
+  "TRAIN R": {
+    name: "R",
+    color: "#E8A9BB",
+    backgroundColor: "#81384D",
+    textColor: "#222",
+    order: 307,
+    mode: "TRAIN",
+  },
+  "TRAIN U": {
+    name: "U",
+    color: "#AB2345",
+    backgroundColor: "#51071A",
+    textColor: "#fff",
+    order: 308,
+    mode: "TRAIN",
+  },
+};
+
+export const MODE_NAMES: { [key: string]: string } = {
+  METRO: "métro",
+  RER: "RER",
+  TRAM: "tramway",
+  TRAIN: "train",
+  OTHER: "autres",
 };

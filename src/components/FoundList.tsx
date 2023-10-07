@@ -1,12 +1,13 @@
 import { Transition } from "@headlessui/react";
 import classNames from "classnames";
 import StreetIcon from "@/components/StreetIcon";
-import { METRO, METRO_LINES } from "@/lib/constants";
+import { LINES } from "@/lib/constants";
 import SortMenu from "@/components/SortMenu";
 import { memo, useMemo, useState } from "react";
 import { SortOption, DataFeature, SortOptionType } from "@/lib/types";
 import { DateAddedIcon } from "./DateAddedIcon";
-import { last, sortBy } from "lodash";
+import { sortBy } from "lodash";
+import Image from "next/image";
 
 const FoundList = ({
   found,
@@ -16,6 +17,7 @@ const FoundList = ({
   hideLabels,
   foundStreetsKm,
   zoomToFeature,
+  includeStreets = false,
 }: {
   found: number[];
   foundStreetsKm?: number;
@@ -24,6 +26,7 @@ const FoundList = ({
   hoveredId: number | null;
   hideLabels?: boolean;
   zoomToFeature: (id: number) => void;
+  includeStreets?: boolean;
 }) => {
   const sortOptions: SortOption[] = useMemo(() => {
     return [
@@ -33,14 +36,14 @@ const FoundList = ({
         shortName: <DateAddedIcon className="h-4 w-4" />,
       },
       { name: "Nom", id: "name", shortName: "A-Z" },
-      { name: "Longueur", id: "length", shortName: "km" },
+      ...(includeStreets
+        ? ([{ name: "Longueur", id: "length", shortName: "km" }] as const)
+        : []),
       { name: "Ligne", id: "line", shortName: "1-9" },
     ];
-  }, []);
+  }, [includeStreets]);
 
   const [sort, setSort] = useState<SortOptionType>("order");
-
-  // @todo an effect to add the stations whose names have already been found to the found list.
 
   const sorted = useMemo(() => {
     switch (sort) {
@@ -68,7 +71,7 @@ const FoundList = ({
             const feature = idMap.get(id);
             if (!feature) return null;
             if (!feature.properties.line) return Infinity;
-            return METRO[feature.properties.line]?.order || Infinity;
+            return LINES[feature.properties.line]?.order || Infinity;
           },
           // then by location, roughly
           (id) => {
@@ -119,8 +122,8 @@ const FoundList = ({
       {sorted.length > 0 && (
         <div className="flex justify-between items-center mb-4">
           <div>
-            <p className="text-sm uppercase text-blue-900">
-              {sorted.length} éléments
+            <p className="text-sm uppercase text-blue-900 text-opacity-75">
+              {sorted.length} station{sorted.length > 1 ? "s" : ""}
             </p>
             {foundStreetsKm !== undefined && (
               <p className="text-xs uppercase text-blue-900">
@@ -199,25 +202,24 @@ const GroupedLine = memo(
             }
           )}
         >
-          {sortBy(features, (f) => METRO[f.properties.line || ""]?.order).map(
-            (feature) =>
-              feature.properties.line ? (
-                <span
+          {sortBy(features, (f) => LINES[f.properties.line || ""]?.order).map(
+            (feature) => {
+              return feature.properties.line ? (
+                <Image
                   key={feature.id!}
-                  className="w-5 h-5 rounded-full font-bold text-xs flex items-center justify-center -mr-1"
-                  style={{
-                    backgroundColor: METRO[feature.properties.line]?.color,
-                    color: METRO[feature.properties.line]?.textColor,
-                  }}
-                >
-                  {METRO[feature.properties.line]?.name}
-                </span>
+                  alt={feature.properties.line}
+                  src={`/images/${LINES[feature.properties.line]?.name}.png`}
+                  width={64}
+                  height={64}
+                  className="w-5 h-5 -mr-0.5"
+                />
               ) : (
-                <StreetIcon key={feature.id!} className="w-5 h-5 -mr-1" />
-              )
+                <StreetIcon key={feature.id!} className="w-5 h-5 -mr-0.5" />
+              );
+            }
           )}
 
-          <span className="ml-3 max-w-md truncate">
+          <span className="ml-2.5 max-w-md truncate">
             {features[0].properties.long_name || features[0].properties.name}
           </span>
           {!!length ? (

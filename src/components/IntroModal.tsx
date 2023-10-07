@@ -5,12 +5,13 @@ export default function IntroModal({
   open,
   setOpen,
   inputRef,
+  children,
 }: {
   open?: boolean;
   setOpen: (open: boolean) => void;
   inputRef: React.RefObject<HTMLInputElement>;
+  children: React.ReactNode;
 }) {
-  // @ts-ignore
   inputRef.current?.focus();
   return (
     <Transition.Root show={!!open} as={Fragment}>
@@ -39,10 +40,7 @@ export default function IntroModal({
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <div className="relative transform overflow-hidden rounded-lg font-sans text-white px-4 pb-4 pt-5 text-left transition-all sm:my-8 sm:w-full sm:max-w-md sm:p-6">
-                <p className="text-2xl">
-                  Tapez le nom d&apos;une rue de Paris ou d&apos;une station de
-                  métro, puis appuyez sur Entrée.
-                </p>
+                <p className="text-2xl">{children}</p>
               </div>
             </Transition.Child>
           </div>

@@ -18,7 +18,7 @@ export default function SortMenu({
     <div className="h-8 w-16">
       <Listbox value={sort} onChange={setSort}>
         <div className="relative mt-1">
-          <Listbox.Button className="relative w-full flex items-center justify-between cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300">
+          <Listbox.Button className="relative w-full flex items-center justify-between cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300">
             <span className="font-bold text-gray-600 text-xs whitespace-nowrap">
               {sortOptions.find((o) => o.id === sort)!.shortName}
             </span>
