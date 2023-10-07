@@ -38,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr">
+    <html className={font.className} lang="fr">
       <body className={font.className}>{children}</body>
       <Analytics />
     </html>

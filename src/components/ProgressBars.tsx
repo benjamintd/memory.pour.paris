@@ -11,7 +11,6 @@ const ProgressBars = ({
   foundStationsPerLine: Record<string, number>;
   stationsPerLine: Record<string, number>;
 }) => {
-  console.log(foundStationsPerLine, stationsPerLine);
   return (
     <div className="@container grid grid-cols-[repeat(8,min-content)] gap-2">
       {Object.keys(LINES)

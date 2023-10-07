@@ -1,3 +1,5 @@
+export const BEG_THRESHOLD = 1.01; // @todo put back down
+
 export const METRO_LINES = [
   "METRO 1",
   "METRO 2",

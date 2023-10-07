@@ -6,7 +6,6 @@ import { useState, KeyboardEventHandler, useCallback } from "react";
 import Fuse from "fuse.js";
 import { DataFeature } from "@/lib/types";
 import { Transition } from "@headlessui/react";
-import { center } from "@turf/turf";
 import { sortBy } from "lodash";
 
 const Input = ({
@@ -42,7 +41,6 @@ const Input = ({
       const results = fuse.search(sanitizedSearch);
       let someAlreadyFound = false;
       const matches: number[] = [];
-      console.log(results);
       for (let i = 0; i < results.length; i++) {
         const result = results[i];
         if (
@@ -119,7 +117,7 @@ const Input = ({
           "relative transition-shadow duration-300 z-40 w-full px-4 py-2 rounded-full text-lg font-bold shadow-lg text-blue-900 outline-none focus:ring-2 ring-blue-800 caret-current"
         )}
         ref={inputRef}
-        placeholder="Station de métro, tram, RER..."
+        placeholder="Station"
         value={search}
         onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
         id="input"

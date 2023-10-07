@@ -1,11 +1,10 @@
 "use client";
 
 import { LINES, MODE_NAMES } from "@/lib/constants";
-import getMode from "@/lib/getMode";
 import { usePrevious } from "@react-hookz/web";
 import classNames from "classnames";
 import { range } from "lodash";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import MetroProgressBars from "./MetroProgressBars";
 import ProgressBars from "./ProgressBars";
 import { MaximizeIcon } from "./MaximizeIcon";
@@ -17,12 +16,14 @@ const FoundSummary = ({
   foundStreetsPercentage,
   foundStationsPerLine,
   stationsPerLine,
+  foundStationsPerMode,
   minimizable = false,
   defaultMinimized = false,
 }: {
   className?: string;
   foundStreetsPercentage?: number;
   foundStationsPerLine: Record<string, number>;
+  foundStationsPerMode: Record<string, number>;
   stationsPerLine: Record<string, number>;
   minimizable?: boolean;
   defaultMinimized?: boolean;
@@ -65,38 +66,6 @@ const FoundSummary = ({
       makeConfetti();
     }
   }, [previousFound, foundStationsPerLine, stationsPerLine]);
-
-  const foundStationsPerMode = useMemo(() => {
-    let foundStationsPercentagePerMode: Record<string, number> = {};
-    for (let line of Object.keys(foundStationsPerLine)) {
-      const mode = getMode(line);
-
-      if (!foundStationsPercentagePerMode[mode]) {
-        foundStationsPercentagePerMode[mode] = 0;
-      }
-
-      foundStationsPercentagePerMode[mode] += foundStationsPerLine[line];
-    }
-
-    const stationsPerMode = Object.keys(stationsPerLine).reduce((acc, line) => {
-      const mode = getMode(line);
-
-      if (!acc[mode]) {
-        acc[mode] = 0;
-      }
-
-      acc[mode] += stationsPerLine[line];
-
-      return acc;
-    }, {} as Record<string, number>);
-
-    // normalize
-    for (let mode of Object.keys(foundStationsPercentagePerMode)) {
-      foundStationsPercentagePerMode[mode] /= stationsPerMode[mode];
-    }
-
-    return foundStationsPercentagePerMode;
-  }, [foundStationsPerLine, stationsPerLine]);
 
   return (
     <div

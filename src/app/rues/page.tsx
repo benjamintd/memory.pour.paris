@@ -18,6 +18,7 @@ import { DataFeatureCollection, DataFeature } from "@/lib/types";
 import Input from "@/components/Input";
 import { LINES, METRO_LINES } from "@/lib/constants";
 import useHideLabels from "@/hooks/useHideLabels";
+import getMode from "@/lib/getMode";
 
 const fc = data as DataFeatureCollection;
 
@@ -422,6 +423,39 @@ export default function Home() {
     [map, idMap]
   );
 
+  const foundStationsPerMode = useMemo(() => {
+    const stationsPerLine = fc.properties.stationsPerLine;
+    let foundStationsPercentagePerMode: Record<string, number> = {};
+    for (let line of Object.keys(foundStationsPerLine)) {
+      const mode = getMode(line);
+
+      if (!foundStationsPercentagePerMode[mode]) {
+        foundStationsPercentagePerMode[mode] = 0;
+      }
+
+      foundStationsPercentagePerMode[mode] += foundStationsPerLine[line];
+    }
+
+    const stationsPerMode = Object.keys(stationsPerLine).reduce((acc, line) => {
+      const mode = getMode(line);
+
+      if (!acc[mode]) {
+        acc[mode] = 0;
+      }
+
+      acc[mode] += stationsPerLine[line];
+
+      return acc;
+    }, {} as Record<string, number>);
+
+    // normalize
+    for (let mode of Object.keys(foundStationsPercentagePerMode)) {
+      foundStationsPercentagePerMode[mode] /= stationsPerMode[mode];
+    }
+
+    return foundStationsPercentagePerMode;
+  }, [foundStationsPerLine]);
+
   return (
     <main className="flex flex-row items-center justify-between h-screen">
       <div className="relative flex justify-center h-full grow">
@@ -432,6 +466,7 @@ export default function Home() {
             foundStreetsPercentage={foundStreetsPercentage}
             foundStationsPerLine={foundStationsPerLine}
             stationsPerLine={fc.properties.stationsPerLine}
+            foundStationsPerMode={foundStationsPerMode}
           />
           <div className="flex gap-2 lg:gap-4">
             <Input
@@ -456,6 +491,7 @@ export default function Home() {
           foundStreetsPercentage={foundStreetsPercentage}
           foundStationsPerLine={foundStationsPerLine}
           stationsPerLine={fc.properties.stationsPerLine}
+          foundStationsPerMode={foundStationsPerMode}
         />
         <hr className="w-full border-b border-blue-100 my-4" />
         <FoundList

@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import data from "@/data/features-idf.json";
 import Fuse from "fuse.js";
-import { useLocalStorageValue } from "@react-hookz/web";
+import { useLocalStorageValue, usePrevious } from "@react-hookz/web";
 import mapboxgl from "mapbox-gl";
 import { coordEach } from "@turf/meta";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -15,16 +15,37 @@ import FoundSummary from "@/components/FoundSummary";
 import FoundList from "@/components/FoundList";
 import { IDFDataFeatureCollection, DataFeature } from "@/lib/types";
 import Input from "@/components/Input";
-import { LINES } from "@/lib/constants";
+import { BEG_THRESHOLD, LINES } from "@/lib/constants";
 import useHideLabels from "@/hooks/useHideLabels";
-
-const fc = data as IDFDataFeatureCollection;
+import augmentResults from "@/lib/augmentResults";
+import getMode from "@/lib/getMode";
+import StripeModal from "@/components/StripeModal";
 
 export default function Home() {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { hideLabels, setHideLabels } = useHideLabels(map);
+  const [showStripeModal, setShowStripeModal] = useState<boolean>(false);
+  const { value: enableAllNetwork, set: setEnableAllNetwork } =
+    useLocalStorageValue<boolean>("enable-all-network", {
+      defaultValue: false,
+      initializeWithValue: false,
+    });
+
+  const { value: hasShownStripeModal, set: setHasShownStripeModal } =
+    useLocalStorageValue<boolean>("has-shown-stripe-modal", {
+      defaultValue: false,
+      initializeWithValue: false,
+    });
+
+  const fc = useMemo(() => {
+    const fc = data as IDFDataFeatureCollection;
+    if (!enableAllNetwork) {
+      fc.features = fc.features.filter((f) => f.properties.type === "METRO");
+    }
+    return { ...fc };
+  }, [enableAllNetwork]);
 
   const idMap = useMemo(() => {
     const map = new Map<number, DataFeature>();
@@ -32,7 +53,7 @@ export default function Home() {
       map.set(feature.id! as number, feature);
     });
     return map;
-  }, []);
+  }, [fc]);
 
   const { value: legacyLocalFound, set: legacySetFound } = useLocalStorageValue<
     number[]
@@ -50,8 +71,6 @@ export default function Home() {
   );
 
   useEffect(() => {
-    const syncedFound: number[] = [];
-    const syncedFoundSet = new Set(legacyLocalFound || []);
     // @todo synchronize to the new key, and add the stations that have the same name as already found ones.
     if (
       legacyLocalFound &&
@@ -59,32 +78,11 @@ export default function Home() {
       (localFound || []).length === 0
     ) {
       window.alert(
-        "La page a changé pour inclure l'ensemble des lignes ferrées d'Ile de France. Vos stations existantes vont être importés.\n Vous pouvez trouver un lien vers l'ancien jeu dans le menu."
+        "La page a changé pour se concentrer sur les stations de métro. Vos stations existantes vont être importées.\n Vous pouvez trouver un lien vers l'ancien jeu avec les rues dans le menu."
       );
-      for (let i = 0; i < legacyLocalFound.length; i++) {
-        const id = legacyLocalFound[i];
-        const feature = idMap.get(id);
-        if (!feature) continue;
-
-        // search for features with similar names and add them to the list
-        fc.features.forEach((f) => {
-          if (
-            f.properties.name === feature.properties.name &&
-            f.id !== id &&
-            !syncedFoundSet.has(+f.id!)
-          ) {
-            syncedFound.push(f.id! as number);
-            syncedFoundSet.add(+f.id!);
-          }
-        });
-
-        syncedFound.push(id);
-        syncedFoundSet.add(id);
-      }
-
-      setFound(syncedFound);
+      setFound(augmentResults(legacyLocalFound, idMap, fc));
     }
-  }, [legacyLocalFound, setFound, localFound, idMap, legacySetFound]);
+  }, [legacyLocalFound, setFound, localFound, idMap, legacySetFound, fc]);
 
   const { value: isNewPlayer, set: setIsNewPlayer } =
     useLocalStorageValue<boolean>("paris-streets-is-new-player", {
@@ -96,6 +94,13 @@ export default function Home() {
     return localFound || [];
   }, [localFound]);
 
+  const previousFc = usePrevious(fc);
+  useEffect(() => {
+    if (previousFc !== fc) {
+      setFound(augmentResults(found, idMap, fc));
+    }
+  }, [fc, idMap, setFound, found, previousFc]);
+
   const onReset = useCallback(() => {
     if (
       confirm(
@@ -105,8 +110,16 @@ export default function Home() {
       setFound([]);
       legacySetFound([]);
       setIsNewPlayer(true);
+      setHasShownStripeModal(false);
+      setEnableAllNetwork(false);
     }
-  }, [setFound, setIsNewPlayer, legacySetFound]);
+  }, [
+    setFound,
+    setIsNewPlayer,
+    legacySetFound,
+    setHasShownStripeModal,
+    setEnableAllNetwork,
+  ]);
 
   const foundStationsPerLine = useMemo(() => {
     const foundStationsPerLine: { [key: string]: number } = {};
@@ -147,15 +160,29 @@ export default function Home() {
           }
         },
       }),
-    []
+    [fc]
   );
+
+  useEffect(() => {
+    if (map) {
+      for (const layer of ["emplacement-des-gares", "traces-du-reseau-ferre"]) {
+        map.setFilter(layer, [
+          "all",
+          ["match", ["get", "res_com"], Object.keys(LINES), true, false],
+          ...(enableAllNetwork
+            ? []
+            : [["match", ["get", "mode"], ["METRO"], true, false]]),
+        ]);
+      }
+    }
+  }, [enableAllNetwork, map]);
 
   useEffect(() => {
     mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
 
     const mapboxMap = new mapboxgl.Map({
       container: "map",
-      style: "mapbox://styles/benjamintd/clna5eqeb03go01qu5owb83oq",
+      style: "mapbox://styles/benjamintd/clneoq08i03y101r7ek1z305r",
       bounds: [
         [2.21, 48.815573],
         [2.47, 48.91],
@@ -321,7 +348,7 @@ export default function Home() {
     return () => {
       mapboxMap.remove();
     };
-  }, [setMap]);
+  }, [setMap, fc]);
 
   useEffect(() => {
     if (!map) return;
@@ -365,6 +392,58 @@ export default function Home() {
     [map, idMap]
   );
 
+  const foundStationsPerMode = useMemo(() => {
+    const stationsPerLine = fc.properties.stationsPerLine;
+    let foundStationsPercentagePerMode: Record<string, number> = {};
+    for (let line of Object.keys(foundStationsPerLine)) {
+      const mode = getMode(line);
+
+      if (!foundStationsPercentagePerMode[mode]) {
+        foundStationsPercentagePerMode[mode] = 0;
+      }
+
+      foundStationsPercentagePerMode[mode] += foundStationsPerLine[line];
+    }
+
+    const stationsPerMode = Object.keys(stationsPerLine).reduce((acc, line) => {
+      const mode = getMode(line);
+
+      if (!acc[mode]) {
+        acc[mode] = 0;
+      }
+
+      acc[mode] += stationsPerLine[line];
+
+      return acc;
+    }, {} as Record<string, number>);
+
+    // normalize
+    for (let mode of Object.keys(foundStationsPercentagePerMode)) {
+      foundStationsPercentagePerMode[mode] /= stationsPerMode[mode];
+    }
+
+    return foundStationsPercentagePerMode;
+  }, [foundStationsPerLine, fc]);
+
+  useEffect(() => {
+    if (foundStationsPerMode["METRO"] > BEG_THRESHOLD && !hasShownStripeModal) {
+      // once we reach a certain threshold, we show the stripe modal
+      // and unlock the rest of the game.
+      setShowStripeModal(true);
+      setEnableAllNetwork(true);
+      setHasShownStripeModal(true);
+    }
+  }, [
+    hasShownStripeModal,
+    setHasShownStripeModal,
+    foundStationsPerMode,
+    setEnableAllNetwork,
+    found,
+    setFound,
+    idMap,
+    fc,
+  ]);
+
   return (
     <main className="flex flex-row items-center justify-between h-screen">
       <div className="relative flex justify-center h-full grow">
@@ -374,6 +453,7 @@ export default function Home() {
             className="mb-4 lg:hidden bg-white rounded-lg shadow-md p-4"
             foundStationsPerLine={foundStationsPerLine}
             stationsPerLine={fc.properties.stationsPerLine}
+            foundStationsPerMode={foundStationsPerMode}
             minimizable
             defaultMinimized
           />
@@ -398,6 +478,7 @@ export default function Home() {
       <div className="h-full p-6 z-10 overflow-y-auto xl:w-[32rem] lg:w-96 hidden shadow-lg lg:block bg-blue-50">
         <FoundSummary
           foundStationsPerLine={foundStationsPerLine}
+          foundStationsPerMode={foundStationsPerMode}
           stationsPerLine={fc.properties.stationsPerLine}
           minimizable
         />
@@ -418,6 +499,7 @@ export default function Home() {
       >
         Tapez le nom d&apos;une station de métro, puis appuyez sur Entrée.
       </IntroModal>
+      <StripeModal open={showStripeModal} setOpen={setShowStripeModal} />
     </main>
   );
 }

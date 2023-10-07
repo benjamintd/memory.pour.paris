@@ -123,7 +123,7 @@ const FoundList = ({
         <div className="flex justify-between items-center mb-4">
           <div>
             <p className="text-sm uppercase text-blue-900 text-opacity-75">
-              {sorted.length} stations
+              {sorted.length} station{sorted.length > 1 ? "s" : ""}
             </p>
             {foundStreetsKm !== undefined && (
               <p className="text-xs uppercase text-blue-900">
@@ -204,9 +204,6 @@ const GroupedLine = memo(
         >
           {sortBy(features, (f) => LINES[f.properties.line || ""]?.order).map(
             (feature) => {
-              if (feature.properties.line && !LINES[feature.properties.line]) {
-                console.log(feature.properties.line);
-              }
               return feature.properties.line ? (
                 <Image
                   key={feature.id!}
