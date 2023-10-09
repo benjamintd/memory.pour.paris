@@ -426,14 +426,14 @@ export default function Home() {
       // once we reach a certain threshold, we show the stripe modal
       // and unlock the rest of the game.
       setShowStripeModal(true);
-      setEnableAllNetwork(true);
+      // setEnableAllNetwork(true);
       setHasShownStripeModal(true);
     }
   }, [
     hasShownStripeModal,
     setHasShownStripeModal,
     foundStationsPerMode,
-    setEnableAllNetwork,
+    // setEnableAllNetwork,
     found,
     setFound,
     idMap,
@@ -495,7 +495,11 @@ export default function Home() {
       >
         Tapez le nom d&apos;une station de métro, puis appuyez sur Entrée.
       </IntroModal>
-      <StripeModal open={showStripeModal} setOpen={setShowStripeModal} />
+      <StripeModal
+        metroFoundProportion={foundStationsPerMode["METRO"]}
+        open={showStripeModal}
+        setOpen={setShowStripeModal}
+      />
     </main>
   );
 }
