@@ -3,11 +3,12 @@ import classNames from "classnames";
 import StreetIcon from "@/components/StreetIcon";
 import { LINES } from "@/lib/constants";
 import SortMenu from "@/components/SortMenu";
-import { memo, useMemo, useState } from "react";
+import { Fragment, memo, useMemo, useState } from "react";
 import { SortOption, DataFeature, SortOptionType } from "@/lib/types";
 import { DateAddedIcon } from "./DateAddedIcon";
 import { sortBy } from "lodash";
 import Image from "next/image";
+import AdBlock from "./Ad";
 
 const FoundList = ({
   found,
@@ -136,7 +137,21 @@ const FoundList = ({
         </div>
       )}
       <ol className={classNames({ "transition-all blur-md": hideLabels })}>
-        {grouped.map((features) => {
+        {grouped.map((features, i) => {
+          if (i % 10 === 9) {
+            return (
+              <Fragment key={features[0].id}>
+                <GroupedLine
+                  key={features[0].id}
+                  features={features}
+                  zoomToFeature={zoomToFeature}
+                  setHoveredId={setHoveredId}
+                  hoveredId={hoveredId}
+                />
+                <AdBlock />
+              </Fragment>
+            );
+          }
           return (
             <GroupedLine
               key={features[0].id}

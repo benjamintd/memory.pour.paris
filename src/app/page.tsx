@@ -70,8 +70,6 @@ export default function Home() {
   });
 
   useEffect(() => {
-    console.log(legacyLocalFound, localFound, idMap, fc);
-    // @todo synchronize to the new key, and add the stations that have the same name as already found ones.
     if (legacyLocalFound && legacyLocalFound.length > 0 && !localFound) {
       window.alert(
         "La page a changé pour se concentrer sur les stations de métro. Vos stations existantes vont être importées.\n Vous pouvez trouver un lien vers l'ancien jeu avec les rues dans le menu."

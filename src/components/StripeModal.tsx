@@ -49,9 +49,7 @@ export default function StripeModal({
                   </div>
                 </div>
                 <div className="mt-5 sm:mt-6">
-                  <p className="text-sm mb-2">
-                    Ce jeu est gratuit et sans publicité.
-                  </p>
+                  <p className="text-sm mb-2">Ce jeu est gratuit.</p>
                   <p className="text-sm mb-4">
                     Soutenez le développement de{" "}
                     <strong>memory.pour.paris</strong> en faisant un don libre.
