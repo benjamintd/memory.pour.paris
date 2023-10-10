@@ -30,6 +30,7 @@ const main = async () => {
       nom_gares: string;
       res_com: string;
       nom_zdc: string;
+      nom_zda: string;
       mode: string;
     }
   >;
@@ -45,6 +46,7 @@ const main = async () => {
           id,
           name: feature.properties.nom_zdc,
           long_name: feature.properties.nom_gares,
+          short_name: feature.properties.nom_zda,
           type: feature.properties.mode,
           line: feature.properties.res_com,
         },
