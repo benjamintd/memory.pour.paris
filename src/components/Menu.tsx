@@ -7,18 +7,27 @@ import classNames from "classnames";
 import AboutModal from "./AboutModal";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import useDownload from "@/hooks/useDownload";
+import useUpload from "@/hooks/useUpload";
 
 export default function MenuComponent({
   onReset,
   setHideLabels,
   hideLabels,
+  localStorageKey,
+  setFound,
 }: {
   onReset: () => void;
   hideLabels: boolean;
   setHideLabels: (hide: boolean) => void;
+  localStorageKey: string;
+  setFound: (found: number[]) => void;
 }) {
   const pathname = usePathname();
   const [modalOpen, setModalOpen] = useState(false);
+
+  const download = useDownload(localStorageKey, "data.txt");
+  const onUpload = useUpload(setFound);
 
   return (
     <Menu as="div" className="relative inline-block text-left">
@@ -82,6 +91,43 @@ export default function MenuComponent({
                 );
               }}
             </Menu.Item>
+            <Menu.Item>
+              {({ active }) => {
+                return (
+                  <button
+                    onClick={download}
+                    className={classNames(
+                      active ? "bg-gray-100 text-gray-900" : "text-gray-700",
+                      "block px-4 py-2 text-sm text-left w-full"
+                    )}
+                  >
+                    Exporter ma partie
+                  </button>
+                );
+              }}
+            </Menu.Item>
+            <Menu.Item>
+              {({ active, close }) => {
+                return (
+                  <div
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById("file")?.click();
+                    }}
+                  >
+                    <label
+                      htmlFor="file"
+                      className={classNames(
+                        active ? "bg-gray-100 text-gray-900" : "text-gray-700",
+                        "block px-4 py-2 text-sm text-left w-full cursor-pointer"
+                      )}
+                    >
+                      Importer une partie
+                    </label>
+                  </div>
+                );
+              }}
+            </Menu.Item>
             {pathname === "/" && (
               <Menu.Item>
                 {({ active }) => (
@@ -129,6 +175,7 @@ export default function MenuComponent({
         </Menu.Items>
       </Transition>
       <AboutModal open={modalOpen} setOpen={setModalOpen} />
+      <input type="file" id="file" className="hidden" onChange={onUpload} />
     </Menu>
   );
 }
