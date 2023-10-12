@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@ctrl/react-adsense": "^1.7.0",
-    "@headlessui/react": "1.6.2",
+    "@headlessui/react": "^1.7.4",
     "@react-hookz/web": "^23.1.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@turf/turf": "^5.1.6",

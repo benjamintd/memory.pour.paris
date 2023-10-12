@@ -462,6 +462,8 @@ export default function Home() {
               idMap={idMap}
             />
             <MenuComponent
+              setFound={setFound}
+              localStorageKey="paris-stations"
               onReset={onReset}
               hideLabels={hideLabels}
               setHideLabels={setHideLabels}
