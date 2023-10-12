@@ -35,6 +35,14 @@ const Input = ({
       if (e.key !== "Enter") return;
       if (!search) return;
 
+      // import from clipboard
+      if (search.startsWith("[") && search.endsWith("]")) {
+        setFound(JSON.parse(search));
+        setIsNewPlayer(false);
+        setSearch("");
+        return;
+      }
+
       e.preventDefault();
 
       const sanitizedSearch = removeAccents(search);

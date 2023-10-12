@@ -3,9 +3,8 @@ import { useCallback, useEffect, useRef } from "react";
 const useDownload = (localStorageLocation: string, fileName?: string) => {
   const handleDownload = useCallback(() => {
     const a = document.createElement("a");
-    const content = btoa(
-      window.localStorage.getItem(localStorageLocation) || "[]"
-    );
+    const data = window.localStorage.getItem(localStorageLocation) || "[]";
+    const content = btoa(data);
 
     const targetUrl = `data:application/octet-stream;base64,${content}`;
     a.href = targetUrl;
@@ -20,6 +19,8 @@ const useDownload = (localStorageLocation: string, fileName?: string) => {
     a.click();
 
     document.body.removeChild(a);
+    // also copy the content to clipboard
+    navigator.clipboard.writeText(data);
   }, [localStorageLocation, fileName]);
 
   return handleDownload;
