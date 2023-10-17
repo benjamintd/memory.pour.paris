@@ -138,7 +138,7 @@ const FoundList = ({
       )}
       <ol className={classNames({ "transition-all blur-md": hideLabels })}>
         {grouped.map((features, i) => {
-          if (i % 10 === 9) {
+          if (i % 20 === 19) {
             return (
               <Fragment key={features[0].id}>
                 <GroupedLine

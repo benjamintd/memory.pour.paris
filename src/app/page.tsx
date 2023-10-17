@@ -15,36 +15,46 @@ import FoundSummary from "@/components/FoundSummary";
 import FoundList from "@/components/FoundList";
 import { IDFDataFeatureCollection, DataFeature } from "@/lib/types";
 import Input from "@/components/Input";
-import { BEG_THRESHOLD, LINES } from "@/lib/constants";
+import { BEG_THRESHOLD, IDF_THRESHOLD, LINES } from "@/lib/constants";
 import useHideLabels from "@/hooks/useHideLabels";
 import augmentResults from "@/lib/augmentResults";
 import getMode from "@/lib/getMode";
 import StripeModal from "@/components/StripeModal";
+import IDFModal from "@/components/IDFModal";
 
 export default function Home() {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { hideLabels, setHideLabels } = useHideLabels(map);
-  const [showStripeModal, setShowStripeModal] = useState<boolean>(false);
   const { value: enableAllNetwork, set: setEnableAllNetwork } =
     useLocalStorageValue<boolean>("enable-all-network", {
       defaultValue: false,
       initializeWithValue: false,
     });
 
+  const [showStripeModal, setShowStripeModal] = useState<boolean>(false);
   const { value: hasShownStripeModal, set: setHasShownStripeModal } =
     useLocalStorageValue<boolean>("has-shown-stripe-modal", {
       defaultValue: false,
       initializeWithValue: false,
     });
 
+  const [showIDFModal, setShowIDFModal] = useState<boolean>(false);
+  const { value: hasShownIDFModal, set: setHasShownIDFModal } =
+    useLocalStorageValue<boolean>("has-shown-idf-modal", {
+      defaultValue: false,
+      initializeWithValue: false,
+    });
+
   const fc = useMemo(() => {
-    const fc = data as IDFDataFeatureCollection;
-    if (!enableAllNetwork) {
-      fc.features = fc.features.filter((f) => f.properties.type === "METRO");
-    }
-    return { ...fc };
+    return {
+      ...data,
+      type: "FeatureCollection",
+      features: enableAllNetwork
+        ? data.features
+        : data.features.filter((f) => f.properties.type === "METRO"),
+    } as IDFDataFeatureCollection;
   }, [enableAllNetwork]);
 
   const idMap = useMemo(() => {
@@ -106,6 +116,7 @@ export default function Home() {
       setIsNewPlayer(true);
       setHasShownStripeModal(false);
       setEnableAllNetwork(false);
+      setHasShownIDFModal(false);
     }
   }, [
     setFound,
@@ -113,6 +124,7 @@ export default function Home() {
     legacySetFound,
     setHasShownStripeModal,
     setEnableAllNetwork,
+    setHasShownIDFModal,
   ]);
 
   const foundStationsPerLine = useMemo(() => {
@@ -158,191 +170,185 @@ export default function Home() {
   );
 
   useEffect(() => {
-    if (map) {
-      for (const layer of ["emplacement-des-gares", "traces-du-reseau-ferre"]) {
-        map.setFilter(layer, [
-          "all",
-          ["match", ["get", "res_com"], Object.keys(LINES), true, false],
-          ...(enableAllNetwork
-            ? []
-            : [["match", ["get", "mode"], ["METRO"], true, false]]),
-        ]);
-      }
+    if (!map) {
+      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
+
+      const mapboxMap = new mapboxgl.Map({
+        container: "map",
+        style: "mapbox://styles/benjamintd/clneoq08i03y101r7ek1z305r",
+        bounds: [
+          [2.21, 48.815573],
+          [2.47, 48.91],
+        ],
+        minZoom: 6,
+        fadeDuration: 50,
+      });
+
+      mapboxMap.on("load", () => {
+        mapboxMap.addSource("paris", {
+          type: "geojson",
+          data: fc,
+        });
+
+        mapboxMap.addSource("hovered", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: [],
+          },
+        });
+
+        mapboxMap.addLayer({
+          id: "metro-hovered",
+          type: "circle",
+          paint: {
+            "circle-radius": 16,
+            "circle-color": "#fde047",
+            "circle-blur-transition": {
+              duration: 100,
+            },
+            "circle-blur": 1,
+          },
+          source: "hovered",
+          filter: ["==", "$type", "Point"],
+        });
+
+        mapboxMap.addLayer({
+          type: "circle",
+          source: "paris",
+          id: "metro-circles",
+          paint: {
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              9,
+              ["case", ["to-boolean", ["feature-state", "found"]], 2, 1],
+              16,
+              ["case", ["to-boolean", ["feature-state", "found"]], 6, 4],
+            ],
+            "circle-color": [
+              "case",
+              ["to-boolean", ["feature-state", "found"]],
+              [
+                "match",
+                ["get", "line"],
+                ...Object.keys(LINES).flatMap((line) => [
+                  [line],
+                  LINES[line].color,
+                ]),
+                "rgba(255, 255, 255, 0.8)",
+              ],
+              "rgba(255, 255, 255, 0.8)",
+            ],
+            "circle-stroke-color": [
+              "case",
+              ["to-boolean", ["feature-state", "found"]],
+              [
+                "match",
+                ["get", "line"],
+                ...Object.keys(LINES).flatMap((line) => [
+                  [line],
+                  LINES[line].backgroundColor,
+                ]),
+                "rgba(255, 255, 255, 0.8)",
+              ],
+              "rgba(255, 255, 255, 0.8)",
+            ],
+            "circle-stroke-width": [
+              "case",
+              ["to-boolean", ["feature-state", "found"]],
+              1,
+              0,
+            ],
+          },
+        });
+
+        mapboxMap.addLayer({
+          minzoom: 11,
+          layout: {
+            "text-field": ["to-string", ["get", "name"]],
+            "text-font": ["Parisine Regular", "Arial Unicode MS Regular"],
+            "text-anchor": "bottom",
+            "text-offset": [0, -0.5],
+            "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 22, 14],
+          },
+          type: "symbol",
+          source: "paris",
+          id: "metro-labels",
+          paint: {
+            "text-color": [
+              "case",
+              ["to-boolean", ["feature-state", "found"]],
+              "rgb(29, 40, 53)",
+              "rgba(0, 0, 0, 0)",
+            ],
+            "text-halo-color": [
+              "case",
+              ["to-boolean", ["feature-state", "found"]],
+              "rgba(255, 255, 255, 0.8)",
+              "rgba(0, 0, 0, 0)",
+            ],
+            "text-halo-blur": 1,
+            "text-halo-width": 1,
+          },
+        });
+
+        mapboxMap.addLayer({
+          id: "hover-label-point",
+          type: "symbol",
+          paint: {
+            "text-halo-color": "rgb(255, 255, 255)",
+            "text-halo-width": 2,
+            "text-halo-blur": 1,
+            "text-color": "rgb(29, 40, 53)",
+          },
+          layout: {
+            "text-field": ["to-string", ["get", "name"]],
+            "text-font": ["Parisine Bold", "Arial Unicode MS Regular"],
+            "text-anchor": "bottom",
+            "text-offset": [0, -0.6],
+            "text-size": ["interpolate", ["linear"], ["zoom"], 11, 14, 22, 16],
+            "symbol-placement": "point",
+          },
+          source: "hovered",
+          filter: ["==", "$type", "Point"],
+        });
+
+        mapboxMap.once("idle", () => {
+          mapboxMap.on("mousemove", ["metro-circles"], (e) => {
+            if (e.features && e.features.length > 0) {
+              const feature = e.features.find((f) => f.state.found && f.id);
+              if (feature && feature.id) {
+                return setHoveredId(feature.id as number);
+              }
+            }
+
+            setHoveredId(null);
+          });
+
+          mapboxMap.on("mouseleave", ["metro-circles"], () => {
+            setHoveredId(null);
+          });
+        });
+
+        setMap(mapboxMap);
+      });
     }
-  }, [enableAllNetwork, map]);
+  }, [setMap, fc, map]);
 
   useEffect(() => {
-    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
-
-    const mapboxMap = new mapboxgl.Map({
-      container: "map",
-      style: "mapbox://styles/benjamintd/clneoq08i03y101r7ek1z305r",
-      bounds: [
-        [2.21, 48.815573],
-        [2.47, 48.91],
-      ],
-      minZoom: 6,
-      fadeDuration: 50,
-    });
-
-    mapboxMap.on("load", () => {
-      mapboxMap.addSource("paris", {
-        type: "geojson",
-        data: fc,
-      });
-
-      mapboxMap.addSource("hovered", {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: [],
-        },
-      });
-
-      mapboxMap.addLayer({
-        id: "metro-hovered",
-        type: "circle",
-        paint: {
-          "circle-radius": 16,
-          "circle-color": "#fde047",
-          "circle-blur-transition": {
-            duration: 100,
-          },
-          "circle-blur": 1,
-        },
-        source: "hovered",
-        filter: ["==", "$type", "Point"],
-      });
-
-      mapboxMap.addLayer({
-        type: "circle",
-        source: "paris",
-        id: "metro-circles",
-        paint: {
-          "circle-radius": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            9,
-            ["case", ["to-boolean", ["feature-state", "found"]], 2, 1],
-            16,
-            ["case", ["to-boolean", ["feature-state", "found"]], 6, 4],
-          ],
-          "circle-color": [
-            "case",
-            ["to-boolean", ["feature-state", "found"]],
-            [
-              "match",
-              ["get", "line"],
-              ...Object.keys(LINES).flatMap((line) => [
-                [line],
-                LINES[line].color,
-              ]),
-              "rgba(255, 255, 255, 0.8)",
-            ],
-            "rgba(255, 255, 255, 0.8)",
-          ],
-          "circle-stroke-color": [
-            "case",
-            ["to-boolean", ["feature-state", "found"]],
-            [
-              "match",
-              ["get", "line"],
-              ...Object.keys(LINES).flatMap((line) => [
-                [line],
-                LINES[line].backgroundColor,
-              ]),
-              "rgba(255, 255, 255, 0.8)",
-            ],
-            "rgba(255, 255, 255, 0.8)",
-          ],
-          "circle-stroke-width": [
-            "case",
-            ["to-boolean", ["feature-state", "found"]],
-            1,
-            0,
-          ],
-        },
-      });
-
-      mapboxMap.addLayer({
-        minzoom: 11,
-        layout: {
-          "text-field": ["to-string", ["get", "name"]],
-          "text-font": ["Parisine Regular", "Arial Unicode MS Regular"],
-          "text-anchor": "bottom",
-          "text-offset": [0, -0.5],
-          "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 22, 14],
-        },
-        type: "symbol",
-        source: "paris",
-        id: "metro-labels",
-        paint: {
-          "text-color": [
-            "case",
-            ["to-boolean", ["feature-state", "found"]],
-            "rgb(29, 40, 53)",
-            "rgba(0, 0, 0, 0)",
-          ],
-          "text-halo-color": [
-            "case",
-            ["to-boolean", ["feature-state", "found"]],
-            "rgba(255, 255, 255, 0.8)",
-            "rgba(0, 0, 0, 0)",
-          ],
-          "text-halo-blur": 1,
-          "text-halo-width": 1,
-        },
-      });
-
-      mapboxMap.addLayer({
-        id: "hover-label-point",
-        type: "symbol",
-        paint: {
-          "text-halo-color": "rgb(255, 255, 255)",
-          "text-halo-width": 2,
-          "text-halo-blur": 1,
-          "text-color": "rgb(29, 40, 53)",
-        },
-        layout: {
-          "text-field": ["to-string", ["get", "name"]],
-          "text-font": ["Parisine Bold", "Arial Unicode MS Regular"],
-          "text-anchor": "bottom",
-          "text-offset": [0, -0.6],
-          "text-size": ["interpolate", ["linear"], ["zoom"], 11, 14, 22, 16],
-          "symbol-placement": "point",
-        },
-        source: "hovered",
-        filter: ["==", "$type", "Point"],
-      });
-
-      mapboxMap.once("data", () => {
-        setMap((map) => (map === null ? mapboxMap : map));
-      });
-
-      mapboxMap.once("idle", () => {
-        setMap((map) => (map === null ? mapboxMap : map));
-        mapboxMap.on("mousemove", ["metro-circles"], (e) => {
-          if (e.features && e.features.length > 0) {
-            const feature = e.features.find((f) => f.state.found && f.id);
-            if (feature && feature.id) {
-              return setHoveredId(feature.id as number);
-            }
-          }
-
-          setHoveredId(null);
-        });
-
-        mapboxMap.on("mouseleave", ["metro-circles"], () => {
-          setHoveredId(null);
-        });
-      });
-    });
-
-    return () => {
-      mapboxMap.remove();
-    };
-  }, [setMap, fc]);
+    if (!map) return;
+    const value = [
+      "all",
+      ["match", ["get", "res_com"], Object.keys(LINES), true, false],
+      ...(enableAllNetwork
+        ? []
+        : [["match", ["get", "mode"], ["METRO"], true, false]]),
+    ];
+    map.setFilter("emplacement-des-gares", value);
+    map.setFilter("traces-du-reseau-ferre", value);
+  }, [map, enableAllNetwork]);
 
   useEffect(() => {
     if (!map) return;
@@ -424,18 +430,24 @@ export default function Home() {
       // once we reach a certain threshold, we show the stripe modal
       // and unlock the rest of the game.
       setShowStripeModal(true);
-      // setEnableAllNetwork(true);
       setHasShownStripeModal(true);
+    } else if (
+      foundStationsPerMode["METRO"] > IDF_THRESHOLD &&
+      !hasShownIDFModal
+    ) {
+      setShowIDFModal(true);
+      setHasShownIDFModal(true);
     }
   }, [
     hasShownStripeModal,
     setHasShownStripeModal,
     foundStationsPerMode,
-    // setEnableAllNetwork,
     found,
     setFound,
     idMap,
     fc,
+    hasShownIDFModal,
+    setHasShownIDFModal,
   ]);
 
   return (
@@ -499,6 +511,11 @@ export default function Home() {
         metroFoundProportion={foundStationsPerMode["METRO"]}
         open={showStripeModal}
         setOpen={setShowStripeModal}
+      />
+      <IDFModal
+        setEnableAllNetwork={setEnableAllNetwork}
+        open={showIDFModal}
+        setOpen={setShowIDFModal}
       />
     </main>
   );
