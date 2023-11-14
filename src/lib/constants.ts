@@ -1,4 +1,5 @@
 export const BEG_THRESHOLD = 0.3;
+export const IDF_THRESHOLD = 0.5;
 
 export const METRO_LINES = [
   "METRO 1",
