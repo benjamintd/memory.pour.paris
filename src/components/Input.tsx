@@ -7,6 +7,7 @@ import Fuse from "fuse.js";
 import { DataFeature } from "@/lib/types";
 import { Transition } from "@headlessui/react";
 import { sortBy } from "lodash";
+import usePushEvent from "@/hooks/usePushEvent";
 
 const Input = ({
   fuse,
@@ -29,6 +30,7 @@ const Input = ({
   const [wrong, setWrong] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
   const [alreadyFound, setAlreadyFound] = useState<boolean>(false);
+  const pushEvent = usePushEvent();
 
   const onKeyDown: KeyboardEventHandler<HTMLInputElement> = useCallback(
     (e) => {
@@ -99,6 +101,7 @@ const Input = ({
         ]);
         setIsNewPlayer(false);
         setSearch("");
+        pushEvent(matches);
       }
     },
     [
@@ -111,6 +114,7 @@ const Input = ({
       setIsNewPlayer,
       map,
       idMap,
+      pushEvent,
     ]
   );
 
