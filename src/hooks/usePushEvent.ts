@@ -1,7 +1,7 @@
 const pushEvent = (matches: string[]) => {
   if (matches.length === 0) return;
 
-  fetch("https://www.metro-memory.com/api/count", {
+  fetch("/api/count", {
     method: "POST",
     body: JSON.stringify({
       matches,
