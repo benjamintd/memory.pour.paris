@@ -392,8 +392,20 @@ export default function Home() {
     [map, idMap]
   );
 
+  const stationsPerLine = useMemo(() => {
+    const stationsPerLine: { [key: string]: number } = {};
+    for (let feature of fc.features) {
+      const line = feature.properties.line;
+      if (!line) {
+        continue;
+      }
+      stationsPerLine[line] = (stationsPerLine[line] || 0) + 1;
+    }
+
+    return stationsPerLine;
+  }, [fc]);
+
   const foundStationsPerMode = useMemo(() => {
-    const stationsPerLine = fc.properties.stationsPerLine;
     let foundStationsPercentagePerMode: Record<string, number> = {};
     for (let line of Object.keys(foundStationsPerLine)) {
       const mode = getMode(line);
@@ -423,7 +435,7 @@ export default function Home() {
     }
 
     return foundStationsPercentagePerMode;
-  }, [foundStationsPerLine, fc]);
+  }, [stationsPerLine, foundStationsPerLine]);
 
   useEffect(() => {
     if (foundStationsPerMode["METRO"] > BEG_THRESHOLD && !hasShownStripeModal) {
@@ -458,7 +470,7 @@ export default function Home() {
           <FoundSummary
             className="mb-4 lg:hidden bg-white rounded-lg shadow-md p-4"
             foundStationsPerLine={foundStationsPerLine}
-            stationsPerLine={fc.properties.stationsPerLine}
+            stationsPerLine={stationsPerLine}
             foundStationsPerMode={foundStationsPerMode}
             minimizable
             defaultMinimized
@@ -487,7 +499,7 @@ export default function Home() {
         <FoundSummary
           foundStationsPerLine={foundStationsPerLine}
           foundStationsPerMode={foundStationsPerMode}
-          stationsPerLine={fc.properties.stationsPerLine}
+          stationsPerLine={stationsPerLine}
           minimizable
         />
         <hr className="w-full border-b border-blue-100 my-4" />

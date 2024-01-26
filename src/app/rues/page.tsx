@@ -19,6 +19,7 @@ import Input from "@/components/Input";
 import { LINES, METRO_LINES } from "@/lib/constants";
 import useHideLabels from "@/hooks/useHideLabels";
 import getMode from "@/lib/getMode";
+import { stat } from "fs";
 
 const fc = data as DataFeatureCollection;
 
@@ -423,8 +424,20 @@ export default function Home() {
     [map, idMap]
   );
 
+  const stationsPerLine = useMemo(() => {
+    const stationsPerLine: { [key: string]: number } = {};
+    for (let feature of fc.features) {
+      const line = feature.properties.line;
+      if (!line) {
+        continue;
+      }
+      stationsPerLine[line] = (stationsPerLine[line] || 0) + 1;
+    }
+
+    return stationsPerLine;
+  }, [fc]);
+
   const foundStationsPerMode = useMemo(() => {
-    const stationsPerLine = fc.properties.stationsPerLine;
     let foundStationsPercentagePerMode: Record<string, number> = {};
     for (let line of Object.keys(foundStationsPerLine)) {
       const mode = getMode(line);
@@ -454,7 +467,7 @@ export default function Home() {
     }
 
     return foundStationsPercentagePerMode;
-  }, [foundStationsPerLine]);
+  }, [foundStationsPerLine, stationsPerLine]);
 
   return (
     <main className="flex flex-row items-center justify-between h-screen">
@@ -465,7 +478,7 @@ export default function Home() {
             className="mb-4 lg:hidden bg-white rounded-lg shadow-md p-4"
             foundStreetsPercentage={foundStreetsPercentage}
             foundStationsPerLine={foundStationsPerLine}
-            stationsPerLine={fc.properties.stationsPerLine}
+            stationsPerLine={stationsPerLine}
             foundStationsPerMode={foundStationsPerMode}
           />
           <div className="flex gap-2 lg:gap-4">
@@ -492,7 +505,7 @@ export default function Home() {
         <FoundSummary
           foundStreetsPercentage={foundStreetsPercentage}
           foundStationsPerLine={foundStationsPerLine}
-          stationsPerLine={fc.properties.stationsPerLine}
+          stationsPerLine={stationsPerLine}
           foundStationsPerMode={foundStationsPerMode}
         />
         <hr className="w-full border-b border-blue-100 my-4" />
