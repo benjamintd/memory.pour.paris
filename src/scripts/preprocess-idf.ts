@@ -21,7 +21,7 @@ const Bun = {
 
 const main = async () => {
   // --- STATIONS ---
-  const stations = Bun.file(path.join(__dirname, "../data/stations.geojson"));
+  const stations = Bun.file(path.join(__dirname, "../data/emplacement-des-gares-idf.geojson"));
 
   const stationsCollection = (await stations.json()) as FeatureCollection<
     Point,
@@ -39,7 +39,11 @@ const main = async () => {
 
   const featuresStations = stationsCollection.features
     .map((feature) => {
-      const id = +`${100}${feature.properties.id_gares}`;
+      let id = +`${100}${feature.properties.id_gares}`;
+      // saint-cyr hotfix
+      if (id === 1001252 && feature.properties.res_com === 'TRAM 13') {
+        id = 10012521;
+      }
       return {
         ...feature,
         properties: {
@@ -67,7 +71,7 @@ const main = async () => {
           (stations) => stations.length
         ),
       },
-    })
+    }, null, 2)
   );
 };
 

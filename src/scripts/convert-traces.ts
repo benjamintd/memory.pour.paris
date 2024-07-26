@@ -25,21 +25,25 @@ const main = async () => {
 
   return Bun.write(
     path.join(__dirname, "../data/routes.json"),
-    JSON.stringify({
-      type: "FeatureCollection",
-      features: features.map((feature: any) => {
-        const { geometry, properties } = feature;
+    JSON.stringify(
+      {
+        type: "FeatureCollection",
+        features: features.map((feature: any) => {
+          const { geometry, properties } = feature;
 
-        return {
-          type: "Feature",
-          geometry,
-          properties: {
-            id: properties.res_com,
-            color: `#${properties.colourweb_hexa}`,
-          },
-        };
-      }),
-    })
+          return {
+            type: "Feature",
+            geometry,
+            properties: {
+              id: properties.res_com,
+              color: `#${properties.colourweb_hexa}`,
+            },
+          };
+        }),
+      },
+      null,
+      2
+    )
   );
 };
 
