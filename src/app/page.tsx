@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import data from "@/data/features-idf.json";
 import Fuse from "fuse.js";
 import { useLocalStorageValue, usePrevious } from "@react-hookz/web";
@@ -26,6 +32,7 @@ export default function Home() {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const mainRef = useRef<HTMLElement | null>(null);
   const { hideLabels, setHideLabels } = useHideLabels(map);
   const { value: enableAllNetwork, set: setEnableAllNetwork } =
     useLocalStorageValue<boolean>("enable-all-network", {
@@ -46,6 +53,20 @@ export default function Home() {
       defaultValue: false,
       initializeWithValue: false,
     });
+
+  useEffect(() => {
+    const node = mainRef.current;
+    if (!node) return;
+    const removeStyle = () => {
+      if (node.getAttribute("style")) {
+        node.removeAttribute("style");
+      }
+    };
+    const observer = new MutationObserver(removeStyle);
+    observer.observe(node, { attributes: true, attributeFilter: ["style"] });
+    removeStyle();
+    return () => observer.disconnect();
+  }, []);
 
   const fc = useMemo(() => {
     return {
@@ -463,7 +484,10 @@ export default function Home() {
   ]);
 
   return (
-    <main className="flex flex-row items-center justify-between h-screen">
+    <main
+      ref={mainRef}
+      className="flex flex-row items-center justify-between h-screen"
+    >
       <div className="relative flex justify-center h-full grow">
         <div className="absolute top-0 left-0 w-full h-full" id="map" />
         <div className="absolute w-96 max-w-full px-1 h-12 top-4 lg:top-32">
