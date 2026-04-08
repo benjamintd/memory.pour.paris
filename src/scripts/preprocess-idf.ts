@@ -44,6 +44,10 @@ const main = async () => {
       if (id === 1001252 && feature.properties.res_com === 'TRAM 13') {
         id = 10012521;
       }
+      // villejuif gustave roussy / montreuil hôpital share id_gares 1855
+      if (id === 1001855 && feature.properties.res_com === 'METRO 14') {
+        id = 10018551;
+      }
       return {
         ...feature,
         properties: {

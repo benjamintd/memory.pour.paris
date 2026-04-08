@@ -22317,14 +22317,14 @@
         "type": "Point"
       },
       "properties": {
-        "id": 1001855,
+        "id": 10018551,
         "name": "Villejuif - Gustave Roussy",
         "long_name": "Villejuif - Gustave Roussy",
         "short_name": "Villejuif - Gustave Roussy",
         "type": "METRO",
         "line": "METRO 14"
       },
-      "id": 1001855
+      "id": 10018551
     },
     {
       "type": "Feature",
