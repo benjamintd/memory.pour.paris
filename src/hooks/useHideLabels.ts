@@ -1,7 +1,7 @@
-import mapboxgl from "mapbox-gl";
+import type maplibregl from "maplibre-gl";
 import { useEffect, useState } from "react";
 
-const useHideLabels = (map: mapboxgl.Map | null) => {
+const useHideLabels = (map: maplibregl.Map | null) => {
   const [hideLabels, setHideLabels] = useState<boolean>(false);
 
   useEffect(() => {

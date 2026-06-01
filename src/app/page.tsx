@@ -10,10 +10,11 @@ import {
 import data from "@/data/features-idf.json";
 import Fuse from "fuse.js";
 import { useLocalStorageValue, usePrevious } from "@react-hookz/web";
-import mapboxgl from "mapbox-gl";
+import maplibregl from "maplibre-gl";
 import { coordEach } from "@turf/meta";
-import "mapbox-gl/dist/mapbox-gl.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 import "react-circular-progressbar/dist/styles.css";
+import { buildBaseStyle } from "@/lib/mapStyle";
 import MenuComponent from "@/components/Menu";
 import IntroModal from "@/components/IntroModal";
 import removeAccents from "@/lib/removeAccents";
@@ -29,7 +30,7 @@ import StripeModal from "@/components/StripeModal";
 import IDFModal from "@/components/IDFModal";
 
 export default function Home() {
-  const [map, setMap] = useState<mapboxgl.Map | null>(null);
+  const [map, setMap] = useState<maplibregl.Map | null>(null);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const mainRef = useRef<HTMLElement | null>(null);
@@ -192,11 +193,9 @@ export default function Home() {
 
   useEffect(() => {
     if (!map) {
-      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
-
-      const mapboxMap = new mapboxgl.Map({
+      const mapboxMap = new maplibregl.Map({
         container: "map",
-        style: "mapbox://styles/benjamintd/clneoq08i03y101r7ek1z305r",
+        style: buildBaseStyle(),
         bounds: [
           [2.21, 48.815573],
           [2.47, 48.91],
@@ -219,15 +218,127 @@ export default function Home() {
           },
         });
 
+        // The Île-de-France rail network used to live in the Mapbox-hosted
+        // style as the `idf-mask`, `traces-du-reseau-ferre` and
+        // `emplacement-des-gares` layers. We now render them from the local
+        // geojson served out of /public/data, keeping the same layer ids so
+        // the all-network / metro-only filter toggle still works.
+        mapboxMap.addSource("idf-mask", {
+          type: "geojson",
+          data: "/data/idf-mask.geojson",
+        });
+
+        mapboxMap.addSource("traces", {
+          type: "geojson",
+          data: "/data/traces-du-reseau-ferre-idf.geojson",
+        });
+
+        mapboxMap.addSource("gares", {
+          type: "geojson",
+          data: "/data/emplacement-des-gares-idf.geojson",
+        });
+
+        mapboxMap.addLayer({
+          id: "idf-mask-bg",
+          type: "line",
+          source: "idf-mask",
+          paint: {
+            "line-color": "#31445e",
+            "line-opacity": 0.4,
+            "line-blur": 6,
+            "line-translate": [0.5, 0],
+            "line-width": ["interpolate", ["linear"], ["zoom"], 0, 2, 22, 10],
+          },
+        });
+
+        mapboxMap.addLayer({
+          id: "idf-mask",
+          type: "fill",
+          source: "idf-mask",
+          paint: {
+            "fill-color": "#8eb3e1",
+            "fill-opacity": 0.8,
+          },
+        });
+
+        mapboxMap.addLayer({
+          id: "traces-du-reseau-ferre",
+          type: "line",
+          source: "traces",
+          filter: ["match", ["get", "mode"], ["METRO"], true, false],
+          paint: {
+            "line-color": [
+              "to-color",
+              ["concat", "#", ["get", "colourweb_hexa"]],
+            ],
+            "line-width": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              8.763,
+              1.5,
+              15,
+              3,
+              22,
+              3,
+            ],
+          },
+          layout: {
+            "line-sort-key": [
+              "match",
+              ["get", "mode"],
+              ["METRO"],
+              1000,
+              ["RER"],
+              100,
+              ["TRAMWAY"],
+              500,
+              ["TER"],
+              7,
+              ["TRAIN"],
+              10,
+              ["NAVETTE"],
+              5,
+              0,
+            ],
+          },
+        });
+
+        mapboxMap.addLayer({
+          id: "emplacement-des-gares",
+          type: "circle",
+          source: "gares",
+          filter: ["match", ["get", "mode"], ["METRO"], true, false],
+          paint: {
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              9,
+              1.5,
+              16,
+              4,
+            ],
+            "circle-color": "#ffffff",
+            "circle-stroke-color": "rgb(122, 122, 122)",
+            "circle-stroke-width": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              8,
+              0.5,
+              22,
+              2,
+            ],
+          },
+        });
+
         mapboxMap.addLayer({
           id: "metro-hovered",
           type: "circle",
           paint: {
             "circle-radius": 16,
             "circle-color": "#fde047",
-            "circle-blur-transition": {
-              duration: 100,
-            },
             "circle-blur": 1,
           },
           source: "hovered",
@@ -261,7 +372,7 @@ export default function Home() {
                 "rgba(255, 255, 255, 0.8)",
               ],
               "rgba(255, 255, 255, 0.8)",
-            ],
+            ] as any,
             "circle-stroke-color": [
               "case",
               ["to-boolean", ["feature-state", "found"]],
@@ -275,7 +386,7 @@ export default function Home() {
                 "rgba(255, 255, 255, 0.8)",
               ],
               "rgba(255, 255, 255, 0.8)",
-            ],
+            ] as any,
             "circle-stroke-width": [
               "case",
               ["to-boolean", ["feature-state", "found"]],
@@ -289,7 +400,7 @@ export default function Home() {
           minzoom: 11,
           layout: {
             "text-field": ["to-string", ["get", "name"]],
-            "text-font": ["Parisine Regular", "Arial Unicode MS Regular"],
+            "text-font": ["Jost Regular"],
             "text-anchor": "bottom",
             "text-offset": [0, -0.5],
             "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 22, 14],
@@ -326,7 +437,7 @@ export default function Home() {
           },
           layout: {
             "text-field": ["to-string", ["get", "name"]],
-            "text-font": ["Parisine Bold", "Arial Unicode MS Regular"],
+            "text-font": ["Jost Bold"],
             "text-anchor": "bottom",
             "text-offset": [0, -0.6],
             "text-size": ["interpolate", ["linear"], ["zoom"], 11, 14, 22, 16],
@@ -366,7 +477,7 @@ export default function Home() {
       ...(enableAllNetwork
         ? []
         : [["match", ["get", "mode"], ["METRO"], true, false]]),
-    ];
+    ] as any;
     map.setFilter("emplacement-des-gares", value);
     map.setFilter("traces-du-reseau-ferre", value);
   }, [map, enableAllNetwork]);
@@ -374,7 +485,7 @@ export default function Home() {
   useEffect(() => {
     if (!map) return;
 
-    (map.getSource("hovered") as mapboxgl.GeoJSONSource).setData({
+    (map.getSource("hovered") as maplibregl.GeoJSONSource).setData({
       type: "FeatureCollection",
       features: hoveredId ? [idMap.get(hoveredId)!] : [],
     });
@@ -403,7 +514,7 @@ export default function Home() {
           zoom: 14,
         });
       } else {
-        const bounds = new mapboxgl.LngLatBounds();
+        const bounds = new maplibregl.LngLatBounds();
         coordEach(feature, (coord) => {
           bounds.extend(coord as [number, number]);
         });

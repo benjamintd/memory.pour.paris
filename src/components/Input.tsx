@@ -8,6 +8,7 @@ import { DataFeature } from "@/lib/types";
 import { Transition } from "@headlessui/react";
 import { sortBy } from "lodash";
 import usePushEvent from "@/hooks/usePushEvent";
+import type maplibregl from "maplibre-gl";
 
 const Input = ({
   fuse,
@@ -23,7 +24,7 @@ const Input = ({
   setFound: (found: number[]) => void;
   setIsNewPlayer: (isNewPlayer: boolean) => void;
   inputRef: React.RefObject<HTMLInputElement>;
-  map: mapboxgl.Map | null;
+  map: maplibregl.Map | null;
   idMap: Map<number, DataFeature>;
 }) => {
   const [search, setSearch] = useState<string>("");
@@ -82,13 +83,13 @@ const Input = ({
         setSuccess(true);
         setTimeout(() => setSuccess(false), 250);
         if (map) {
-          (map.getSource("hovered") as mapboxgl.GeoJSONSource).setData({
+          (map.getSource("hovered") as maplibregl.GeoJSONSource).setData({
             type: "FeatureCollection",
             features: (matches || []).map((id) => idMap.get(id)!),
           });
 
           setTimeout(() => {
-            (map.getSource("hovered") as mapboxgl.GeoJSONSource).setData({
+            (map.getSource("hovered") as maplibregl.GeoJSONSource).setData({
               type: "FeatureCollection",
               features: [],
             });

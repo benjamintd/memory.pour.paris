@@ -10,11 +10,12 @@ import {
 import data from "@/data/features.json";
 import Fuse from "fuse.js";
 import { useLocalStorageValue } from "@react-hookz/web";
-import mapboxgl from "mapbox-gl";
+import maplibregl from "maplibre-gl";
 import { sumBy } from "lodash";
 import { coordEach } from "@turf/meta";
-import "mapbox-gl/dist/mapbox-gl.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 import "react-circular-progressbar/dist/styles.css";
+import { buildBaseStyle } from "@/lib/mapStyle";
 import MenuComponent from "@/components/Menu";
 import IntroModal from "@/components/IntroModal";
 import removeAccents from "@/lib/removeAccents";
@@ -30,7 +31,7 @@ import { stat } from "fs";
 const fc = data as DataFeatureCollection;
 
 export default function Home() {
-  const [map, setMap] = useState<mapboxgl.Map | null>(null);
+  const [map, setMap] = useState<maplibregl.Map | null>(null);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const mainRef = useRef<HTMLElement | null>(null);
@@ -134,11 +135,9 @@ export default function Home() {
   );
 
   useEffect(() => {
-    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
-
-    const mapboxMap = new mapboxgl.Map({
+    const mapboxMap = new maplibregl.Map({
       container: "map",
-      style: "mapbox://styles/benjamintd/cln2v5u5m01cn01qn02po0po5",
+      style: buildBaseStyle(),
       bounds: [
         [2.21, 48.815573],
         [2.47, 48.91],
@@ -167,9 +166,6 @@ export default function Home() {
         paint: {
           "circle-radius": 16,
           "circle-color": "#fde047",
-          "circle-blur-transition": {
-            duration: 100,
-          },
           "circle-blur": 1,
         },
         source: "hovered",
@@ -242,7 +238,7 @@ export default function Home() {
               "rgba(255, 255, 255, 0.8)",
             ],
             "rgba(255, 255, 255, 0.8)",
-          ],
+          ] as any,
           "circle-stroke-color": [
             "case",
             ["to-boolean", ["feature-state", "found"]],
@@ -256,7 +252,7 @@ export default function Home() {
               "rgba(255, 255, 255, 0.8)",
             ],
             "rgba(255, 255, 255, 0.8)",
-          ],
+          ] as any,
           "circle-stroke-width": [
             "case",
             ["to-boolean", ["feature-state", "found"]],
@@ -287,7 +283,7 @@ export default function Home() {
         },
         layout: {
           "text-field": ["to-string", ["get", "short_name"]],
-          "text-font": ["Parisine Regular", "Arial Unicode MS Regular"],
+          "text-font": ["Jost Regular"],
           "symbol-placement": "line",
           "symbol-avoid-edges": true,
           "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 22, 16],
@@ -300,7 +296,7 @@ export default function Home() {
         minzoom: 11,
         layout: {
           "text-field": ["to-string", ["get", "name"]],
-          "text-font": ["Parisine Regular", "Arial Unicode MS Regular"],
+          "text-font": ["Jost Regular"],
           "text-anchor": "bottom",
           "text-offset": [0, -0.5],
           "text-size": ["interpolate", ["linear"], ["zoom"], 11, 12, 22, 14],
@@ -343,7 +339,7 @@ export default function Home() {
             ["get", "short_name"],
             "",
           ],
-          "text-font": ["Parisine Bold", "Arial Unicode MS Regular"],
+          "text-font": ["Jost Bold"],
           "text-anchor": "center",
           "text-offset": [0, -0.6],
           "text-size": ["interpolate", ["linear"], ["zoom"], 11, 14, 22, 16],
@@ -365,7 +361,7 @@ export default function Home() {
         },
         layout: {
           "text-field": ["to-string", ["get", "name"]],
-          "text-font": ["Parisine Bold", "Arial Unicode MS Regular"],
+          "text-font": ["Jost Bold"],
           "text-anchor": "bottom",
           "text-offset": [0, -0.6],
           "text-size": ["interpolate", ["linear"], ["zoom"], 11, 14, 22, 16],
@@ -406,7 +402,7 @@ export default function Home() {
   useEffect(() => {
     if (!map) return;
 
-    (map.getSource("hovered") as mapboxgl.GeoJSONSource).setData({
+    (map.getSource("hovered") as maplibregl.GeoJSONSource).setData({
       type: "FeatureCollection",
       features: hoveredId ? [idMap.get(hoveredId)!] : [],
     });
@@ -435,7 +431,7 @@ export default function Home() {
           zoom: 14,
         });
       } else {
-        const bounds = new mapboxgl.LngLatBounds();
+        const bounds = new maplibregl.LngLatBounds();
         coordEach(feature, (coord) => {
           bounds.extend(coord as [number, number]);
         });
